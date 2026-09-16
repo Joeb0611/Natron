@@ -26,6 +26,7 @@ if(WIN32)
     list(APPEND Natron_SOURCES ../Natron.rc)
 endif()
 add_executable(Natron ${Natron_SOURCES})
+set_target_properties(Natron PROPERTIES ENABLE_EXPORTS TRUE)
 if(APPLE)
     set_target_properties(Natron PROPERTIES
         MACOSX_BUNDLE TRUE

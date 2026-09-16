@@ -1,7 +1,11 @@
 /* ***** BEGIN LICENSE BLOCK *****
- * This file is part of Natron <https://natrongithub.github.io/>,
+ * This file is part of Natron+ <https://github.com/Joeb0611/Natron>,
+ * a fork of Natron <https://natrongithub.github.io/>.
+ * (C) 2026 Natron+ contributors
  * (C) 2018-2023 The Natron developers
  * (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+ *
+ * Modified 2026-09-16: minimum free-disk cache setting.
  *
  * Natron is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -110,6 +114,10 @@ public:
     U64 getMaximumViewerDiskCacheSize() const;
 
     U64 getMaximumDiskCacheNodeSize() const;
+
+    U64 getMinimumFreeDiskBytes() const;
+
+    void setMinimumFreeDiskGiBForTests(int gib);
 
     double getUnreachableRamPercent() const;
 
@@ -523,6 +531,7 @@ private:
     ///The total disk space allowed for all Natron's caches
     KnobIntPtr _maxViewerDiskCacheGB;
     KnobIntPtr _maxDiskCacheNodeGB;
+    KnobIntPtr _minFreeDiskGiB;
     KnobPathPtr _diskCachePath;
     KnobButtonPtr _wipeDiskCache;
 

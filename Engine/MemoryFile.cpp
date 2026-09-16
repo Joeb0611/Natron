@@ -1,7 +1,11 @@
 /* ***** BEGIN LICENSE BLOCK *****
- * This file is part of Natron <https://natrongithub.github.io/>,
+ * This file is part of Natron+ <https://github.com/Joeb0611/Natron>,
+ * a fork of Natron <https://natrongithub.github.io/>.
+ * (C) 2026 Natron+ contributors
  * (C) 2018-2023 The Natron developers
  * (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+ *
+ * Modified 2026-09-16: DiskFullError and ENOSPC / free-disk guard.
  *
  * Natron is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +49,7 @@
 
 #include "Global/GlobalDefines.h"
 #include "Global/StrUtils.h"
+#include "Engine/AppManager.h"
 
 #define MIN_FILE_SIZE 4096
 
@@ -294,6 +299,9 @@ void
 MemoryFile::resize(size_t new_size)
 {
 #if defined(__NATRON_UNIX__)
+    if (appPTR && !appPTR->hasEnoughFreeDiskForCache(new_size > _imp->size ? (new_size - _imp->size) : 0)) {
+        throw DiskFullError("MemoryFile EXC : refusing to grow mapping; disk is at the configured free-space floor.");
+    }
     if (_imp->data) {
         if (::munmap(_imp->data, _imp->size) < 0) {
             std::stringstream ss;
@@ -304,6 +312,9 @@ MemoryFile::resize(size_t new_size)
     if (::ftruncate(_imp->file_handle, new_size) < 0) {
         std::stringstream ss;
         ss << "MemoryFile EXC : Failed to truncate the file \"" << _imp->path << "\": " << std::strerror(errno) << " (" << errno << ")";
+        if (errno == ENOSPC) {
+            throw DiskFullError( ss.str() );
+        }
         throw std::runtime_error( ss.str() );
     }
     _imp->data = static_cast<char*>( ::mmap(
@@ -312,10 +323,16 @@ MemoryFile::resize(size_t new_size)
         _imp->data = 0;
         std::stringstream ss;
         ss << "MemoryFile EXC : Failed to create mapping of \"" << _imp->path << "\": " << std::strerror(errno) << " (" << errno << ")";
+        if (errno == ENOSPC || errno == ENOMEM) {
+            throw DiskFullError( ss.str() );
+        }
         throw std::runtime_error( ss.str() );
     }
 
 #elif defined(__NATRON_WIN32__)
+    if (appPTR && !appPTR->hasEnoughFreeDiskForCache(new_size > _imp->size ? (new_size - _imp->size) : 0)) {
+        throw DiskFullError("MemoryFile EXC : refusing to grow mapping; disk is at the configured free-space floor.");
+    }
     ::UnmapViewOfFile(_imp->data);
     ::CloseHandle(_imp->file_mapping_handle);
     _imp->file_mapping_handle = ::CreateFileMapping(
@@ -325,7 +342,7 @@ MemoryFile::resize(size_t new_size)
 #endif
 
     if (!_imp->data) {
-        throw std::bad_alloc();
+        throw DiskFullError("MemoryFile EXC : mapping failed (no space or out of memory).");
     }
     _imp->size = new_size;
 }

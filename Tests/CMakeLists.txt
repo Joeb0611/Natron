@@ -30,6 +30,8 @@ set(Tests_SOURCES
     Lut_Test.cpp
     OSGLContext_Test.cpp
     Tracker_Test.cpp
+    CacheLimits_Test.cpp
+    AppLifecycle_Test.cpp
     wmain.cpp
 )
 add_executable(Tests ${Tests_HEADERS} ${Tests_SOURCES})

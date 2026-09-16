@@ -1,7 +1,11 @@
 /* ***** BEGIN LICENSE BLOCK *****
- * This file is part of Natron <https://natrongithub.github.io/>,
+ * This file is part of Natron+ <https://github.com/Joeb0611/Natron>,
+ * a fork of Natron <https://natrongithub.github.io/>.
+ * (C) 2026 Natron+ contributors
  * (C) 2018-2023 The Natron developers
  * (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+ *
+ * Modified 2026-09-16: cache hard-limit refuse and DiskFullError catch.
  *
  * Natron is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +43,7 @@
 #include <algorithm> // min, max
 #include <string>
 #include <stdexcept>
+#include <iostream>
 
 #include "Global/GlobalDefines.h"
 #include "Global/StrUtils.h"
@@ -57,6 +62,7 @@ GCC_DIAG_ON(deprecated)
 #include "Engine/CacheEntry.h"
 #include "Engine/ImageLocker.h"
 #include "Engine/LRUHashTable.h"
+#include "Engine/MemoryFile.h"
 #include "Engine/MemoryInfo.h" // getSystemTotalRAM
 #include "Engine/Settings.h"
 #include "Engine/StandardPaths.h"
@@ -843,6 +849,14 @@ private:
                 entriesToBeDeleted.clear();
             }
         }
+        if (memoryCacheSize >= maximumInMemorySize) {
+            *returnValue = EntryTypePtr();
+            return;
+        }
+        if ( !appPTR->hasEnoughFreeDiskForCache(0) ) {
+            *returnValue = EntryTypePtr();
+            return;
+        }
         {
             //If _maximumcacheSize == 0 we don't return 1 otherwise we would cause a deadlock
             QMutexLocker k(&_sizeLock);
@@ -887,6 +901,10 @@ private:
                 ///that the separate thread will delete
                 entriesToBeDeleted.clear();
             }
+            if (diskCacheSize >= maximumDiskCacheSize) {
+                *returnValue = EntryTypePtr();
+                return;
+            }
 
         }
         {
@@ -896,14 +914,19 @@ private:
                 returnValue->reset( new EntryType(key, params, this ) );
 
                 ///Don't call allocateMemory() here because we're still under the lock and we might force tons of threads to wait unnecesserarily
+            } catch (const DiskFullError & e) {
+                std::cerr << e.what() << std::endl;
+                *returnValue = EntryTypePtr();
             } catch (const std::bad_alloc & e) {
+                *returnValue = EntryTypePtr();
+            } catch (const std::runtime_error & e) {
+                std::cerr << e.what() << std::endl;
                 *returnValue = EntryTypePtr();
             }
 
-            // For a tiled cache, all entries must have the same size
-            assert(!_isTiled || (*returnValue)->getSizeInBytesFromParams() == _tileByteSize);
-
             if (*returnValue) {
+                // For a tiled cache, all entries must have the same size
+                assert(!_isTiled || (*returnValue)->getSizeInBytesFromParams() == _tileByteSize);
 
                 // If there is a lock, lock it before exposing the entry to other threads
                 if (entryLocker) {

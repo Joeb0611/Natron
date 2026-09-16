@@ -22,6 +22,7 @@ if(WIN32)
     list(APPEND NatronRenderer_SOURCES ../Natron.rc)
 endif()
 add_executable(NatronRenderer ${NatronRenderer_SOURCES})
+set_target_properties(NatronRenderer PROPERTIES ENABLE_EXPORTS TRUE)
 target_link_libraries(NatronRenderer
     PRIVATE
         NatronEngine
