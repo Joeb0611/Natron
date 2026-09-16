@@ -1,7 +1,11 @@
 /* ***** BEGIN LICENSE BLOCK *****
- * This file is part of Natron <https://natrongithub.github.io/>,
+ * This file is part of Natron+ <https://github.com/Joeb0611/Natron>,
+ * a fork of Natron <https://natrongithub.github.io/>.
+ * (C) 2026 Natron+ contributors
  * (C) 2018-2023 The Natron developers
  * (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+ *
+ * Modified 2026-09-16: DiskFullError.
  *
  * Natron is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +33,7 @@
 #include "Global/Macros.h"
 
 #include <string>
+#include <stdexcept>
 
 #include "Global/GlobalDefines.h"
 #include "Global/Enums.h"
@@ -37,6 +42,16 @@
 NATRON_NAMESPACE_ENTER
 
 struct MemoryFilePrivate;
+
+class DiskFullError
+    : public std::runtime_error
+{
+public:
+    explicit DiskFullError(const std::string& what)
+        : std::runtime_error(what)
+    {
+    }
+};
 
 /**
  * @brief A memory file wrapper that maps a file to the virtual memory of the process.
