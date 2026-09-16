@@ -598,10 +598,10 @@ private:
      * @param view The view on which to render
      * @param renderWindow The rectangle to render of the image, in pixel coordinates
      * @param cachedImgParams The parameters of the image to render as they are in the cache.
-     * @param image This is the \"full-scale\" image, if the effect does support the render scale, then
+     * @param image This is the "full-scale" image, if the effect does support the render scale, then
      * image and downscaledImage are pointing to the SAME image.
      * @param downscaledImage If the effect doesn't support the render scale, then this is a pointer to the
-     * downscaled image. If the effect doesn't support render scale then it will render in the \"image\" parameter
+     * downscaled image. If the effect doesn't support render scale then it will render in the "image" parameter
      * and then downscale the results into downscaledImage.
      * @param isSequentialRender True when the render is sequential
      * @param isRenderMadeInResponseToUserInteraction True when the render is made due to user interaction
@@ -609,8 +609,7 @@ private:
      * we need to call renderRoI() on the input effects with this parameter too.
      * @param nodeHash The hash of the node used to render. This might no longer be equal to the value returned by
      * getHash() because the user might have changed something in the project (parameters...links..)
-     * @param channelForAlpha This is passed here because
-     * we need to remember it later when converting the mask
+     * @param channelForAlpha This is passed here so that we can remember it later when converting the mask
      * which channel we wanted for the alpha channel.
      * @param renderFullScaleThenDownscale means that rendering should be done at full resolution and then
      * downscaled, because the plugin does not support render scale.
@@ -636,7 +635,7 @@ private:
                                                  std::bitset<4> processChannels);
 
 
-    /// \\returns false if rendering was aborted
+    /// \returns false if rendering was aborted
     RenderRoIRetCode renderInputImagesForRoI(const FrameViewRequest* request,
                                              bool useTransforms,
                                              StorageModeEnum renderStorageMode,
