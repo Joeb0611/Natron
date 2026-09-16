@@ -20,6 +20,19 @@
 include(FindPkgConfig)
 
 pkg_check_modules(Cairo REQUIRED IMPORTED_TARGET cairo fontconfig)
+# Homebrew cairo.pc only adds include/cairo, so <cairo.h> works but Natron
+# includes <cairo/cairo.h>. Linux finds that via /usr/include; Apple clang
+# does not search /opt/homebrew/include.
+if(APPLE)
+    foreach(_cairo_inc IN LISTS Cairo_INCLUDE_DIRS)
+        get_filename_component(_cairo_parent "${_cairo_inc}" DIRECTORY)
+        if(EXISTS "${_cairo_parent}/cairo/cairo.h")
+            set_property(TARGET PkgConfig::Cairo APPEND PROPERTY
+                INTERFACE_INCLUDE_DIRECTORIES "${_cairo_parent}")
+            break()
+        endif()
+    endforeach()
+endif()
 
 file(GLOB NatronEngine_HEADERS *.h)
 file(GLOB NatronEngine_SOURCES *.cpp)
