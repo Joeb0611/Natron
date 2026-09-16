@@ -1,5 +1,3 @@
-#endif
-
 bool
 Settings::onKnobValueChanged(KnobI* k,
                              ValueChangedReasonEnum reason,

@@ -1,7 +1,11 @@
 /* ***** BEGIN LICENSE BLOCK *****
- * This file is part of Natron <https://natrongithub.github.io/>,
+ * This file is part of Natron+ <https://github.com/Joeb0611/Natron>,
+ * a fork of Natron <https://natrongithub.github.io/>.
+ * (C) 2026 Natron+ contributors
  * (C) 2018-2023 The Natron developers
  * (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+ *
+ * Modified 2026-09-16: abort timeout wakes waiters so headless renders unwind.
  *
  * Natron is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -264,6 +268,8 @@ AbortableRenderInfo::onAbortTimerTimeout()
 
     if ( appPTR->isBackground() ) {
         qDebug() << ss.str().c_str();
+        // Headless has no dialog. Timed waits in waitForImageBeingRenderedElsewhere
+        // and OutputSchedulerThread unwind instead of hanging at CPU-zero (#248).
     } else {
         ss << tr("Would you like to kill these renders?").toStdString() << std::endl << std::endl;
         ss << tr("WARNING: Killing them may not work or may leave %1 in a bad state. The application may crash or freeze as a consequence of this. It is advised to restart %1 instead.").arg( QString::fromUtf8( NATRON_APPLICATION_NAME) ).toStdString();

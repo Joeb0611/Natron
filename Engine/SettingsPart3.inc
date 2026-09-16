@@ -810,3 +810,4 @@ crash_application()
     // coverity[var_deref_op]
     *a = 1;
 }
+#endif
