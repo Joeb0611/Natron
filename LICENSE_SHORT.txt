@@ -1,6 +1,10 @@
-Natron, an open source compositing software
+Natron+, an independent fork of Natron
+(C) 2026 Natron+ contributors
 (C) 2018-2023 The Natron developers
 (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+
+Natron+ is a fork of Natron. It is not an official Natron Project
+build, organization, or release. Upstream: https://natrongithub.github.io
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

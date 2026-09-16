@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+    <id>io.github.joeb0611.natronplus</id>
+    <launchable type="desktop-id">io.github.joeb0611.natronplus.desktop</launchable>
+    <name>Natron+</name>
+    <summary>Independent fork of Natron focused on production stability</summary>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>GPL-2.0-or-later</project_license>
+    <description>
+        <p>
+            Natron+ is a free, open-source (GPLv2-or-later) video compositor.
+            It is an independent fork of Natron (INRIA / Alexandre Gauthier-Foichat / Natron developers)
+            and is not an official Natron Project build.
+        </p>
+    </description>
+    <url type="homepage">https://github.com/Joeb0611/Natron</url>
+    <url type="bugtracker">https://github.com/Joeb0611/Natron/issues</url>
+    <content_rating type="oars-1.1" />
+</component>
