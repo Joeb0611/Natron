@@ -197,6 +197,8 @@
         <file>Resources/Images/loopmode.png</file>
         <file>Resources/Images/maximize.png</file>
         <file>Resources/Images/minimize.png</file>
+        <file>Resources/Images/natronplusIcon.xpm</file>
+        <file>Resources/Images/natronplusIcon.svg</file>
         <file>Resources/Images/natronIcon256_linux.png</file>
         <file>Resources/Images/natronProjectIcon_linux.png</file>
         <file>Resources/Images/nextIncr.png</file>
