@@ -25,6 +25,8 @@ Stability first: crashes, hangs, silent render stalls, cache/data loss, and “w
 
 CMake is the build we run in CI. qmake remains in the tree for now.
 
+CMake generates `natronplusIcon256.png` and `.ico` at configure if they are missing (`python3 tools/generate-natronplus-icons.py`). Run that script before a qmake build. The Qt resource / Linux pixmap is the committed `natronplusIcon.xpm` (plus mark, not the Natron lettermark).
+
 - [GNU/Linux](INSTALL_LINUX.md)
 - [macOS](INSTALL_MACOS.md)
 - [FreeBSD](INSTALL_FREEBSD.md)

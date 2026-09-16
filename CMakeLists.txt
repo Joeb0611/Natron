@@ -63,6 +63,25 @@ if(WIN32)
 endif()
 find_package(Python3 COMPONENTS Interpreter Development)
 
+# png/ico are generated (MCP/git cannot safely round-trip those binaries).
+# The committed natronplusIcon.xpm is the Qt resource; this fills raster
+# install/Windows-resource files when they are missing.
+set(_NATRONPLUS_ICON_SCRIPT "${CMAKE_SOURCE_DIR}/tools/generate-natronplus-icons.py")
+set(_NATRONPLUS_ICON_PNG "${CMAKE_SOURCE_DIR}/Gui/Resources/Images/natronplusIcon256.png")
+set(_NATRONPLUS_ICON_ICO "${CMAKE_SOURCE_DIR}/Gui/Resources/Images/natronplusIcon256.ico")
+if(Python3_EXECUTABLE AND EXISTS "${_NATRONPLUS_ICON_SCRIPT}")
+    if(NOT EXISTS "${_NATRONPLUS_ICON_PNG}" OR NOT EXISTS "${_NATRONPLUS_ICON_ICO}")
+        execute_process(
+            COMMAND "${Python3_EXECUTABLE}" "${_NATRONPLUS_ICON_SCRIPT}"
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+            RESULT_VARIABLE _np_icon_rv
+        )
+        if(NOT _np_icon_rv EQUAL 0)
+            message(FATAL_ERROR "Failed to generate Natron+ icons (${_np_icon_rv})")
+        endif()
+    endif()
+endif()
+
 if(IS_DEBUG_BUILD AND WIN32)
     # Explicitly setting SHIBOKEN_PYTHON_LIBRARIES variable to avoid PYTHON_DEBUG_LIBRARY-NOTFOUND
     # link errors on Windows debug builds.

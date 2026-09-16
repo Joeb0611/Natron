@@ -23,6 +23,7 @@ def is_plate(x: int, y: int) -> bool:
     rx = ry = 40
     if x < margin or y < margin or x >= SIZE - margin or y >= SIZE - margin:
         return False
+    # crude rounded-rect by ignoring far corners
     dx = min(x - margin, SIZE - margin - 1 - x)
     dy = min(y - margin, SIZE - margin - 1 - y)
     if dx < rx and dy < ry:
@@ -41,6 +42,7 @@ def pixels() -> list[tuple[int, int, int, int]]:
             if is_plus(x, y) and is_plate(x, y):
                 out.append(plus)
             elif is_plate(x, y):
+                # 6px inner stroke
                 if not is_plate(x - 6, y) or not is_plate(x + 6, y) or not is_plate(
                     x, y - 6
                 ) or not is_plate(x, y + 6):
@@ -88,6 +90,7 @@ def write_xpm(path: Path, pix: list[tuple[int, int, int, int]]) -> None:
 
 
 def write_ico(path: Path, png_bytes: bytes) -> None:
+    # PNG-in-ICO (Vista+)
     header = struct.pack("<HHH", 0, 1, 1)
     entry = struct.pack("<BBBBHHII", 0, 0, 0, 0, 1, 32, len(png_bytes), 22)
     path.write_bytes(header + entry + png_bytes)
@@ -100,8 +103,6 @@ def main() -> None:
     write_png(png_path, pix)
     write_xpm(root / "natronplusIcon.xpm", pix)
     write_ico(root / "natronplusIcon256.ico", png_path.read_bytes())
-    (root / "natronIcon256_linux.png").write_bytes(png_path.read_bytes())
-    (root / "natronIcon256_windows.ico").write_bytes((root / "natronplusIcon256.ico").read_bytes())
     print(f"wrote icons in {root}")
 
 
