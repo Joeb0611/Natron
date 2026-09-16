@@ -153,3 +153,201 @@ Settings::onKnobValueChanged(KnobI* k,
 
     return ret;
 } // onKnobValueChanged
+
+////////////////////////////////////////////////////////
+// "Viewers" pane
+
+ImageBitDepthEnum
+Settings::getViewersBitDepth() const
+{
+    if (!appPTR->isTextureFloatSupported()) {
+        return eImageBitDepthByte;
+    }
+    int v = _texturesMode->getValue();
+
+    if (v == 0) {
+        return eImageBitDepthByte;
+    } else if (v == 1) {
+        return eImageBitDepthFloat;
+    } else {
+        return eImageBitDepthByte;
+    }
+}
+
+int
+Settings::getViewerTilesPowerOf2() const
+{
+    return _powerOf2Tiling->getValue();
+}
+
+int
+Settings::getCheckerboardTileSize() const
+{
+    return _checkerboardTileSize->getValue();
+}
+
+void
+Settings::getCheckerboardColor1(double* r,
+                                double* g,
+                                double* b,
+                                double* a) const
+{
+    *r = _checkerboardColor1->getValue(0);
+    *g = _checkerboardColor1->getValue(1);
+    *b = _checkerboardColor1->getValue(2);
+    *a = _checkerboardColor1->getValue(3);
+}
+
+void
+Settings::getCheckerboardColor2(double* r,
+                                double* g,
+                                double* b,
+                                double* a) const
+{
+    *r = _checkerboardColor2->getValue(0);
+    *g = _checkerboardColor2->getValue(1);
+    *b = _checkerboardColor2->getValue(2);
+    *a = _checkerboardColor2->getValue(3);
+}
+
+bool
+Settings::isAutoWipeEnabled() const
+{
+    return _autoWipe->getValue();
+}
+
+bool
+Settings::isAutoProxyEnabled() const
+{
+    return _autoProxyWhenScrubbingTimeline->getValue();
+}
+
+unsigned int
+Settings::getAutoProxyMipmapLevel() const
+{
+    return (unsigned int)_autoProxyLevel->getValue() + 1;
+}
+
+int
+Settings::getMaxOpenedNodesViewerContext() const
+{
+    return _maximumNodeViewerUIOpened->getValue();
+}
+
+bool
+Settings::viewerNumberKeys() const
+{
+    return _viewerNumberKeys->getValue();
+}
+
+bool
+Settings::viewerOverlaysPath() const
+{
+    return _viewerOverlaysPath->getValue();
+}
+
+///////////////////////////////////////////////////////
+// "Caching" pane
+
+bool
+Settings::isAggressiveCachingEnabled() const
+{
+    return _aggressiveCaching->getValue();
+}
+
+double
+Settings::getRamMaximumPercent() const
+{
+    return (double)_maxRAMPercent->getValue() / 100.;
+}
+
+U64
+Settings::getMaximumViewerDiskCacheSize() const
+{
+    return (U64)( _maxViewerDiskCacheGB->getValue() ) * 1024 * 1024 * 1024;
+}
+
+U64
+Settings::getMaximumDiskCacheNodeSize() const
+{
+    return (U64)( _maxDiskCacheNodeGB->getValue() ) * 1024 * 1024 * 1024;
+}
+
+U64
+Settings::getMinimumFreeDiskBytes() const
+{
+    return (U64)( _minFreeDiskGiB->getValue() ) * 1024ULL * 1024ULL * 1024ULL;
+}
+
+void
+Settings::setMinimumFreeDiskGiBForTests(int gib)
+{
+    if (gib > _minFreeDiskGiB->getMaximum()) {
+        _minFreeDiskGiB->setMaximum(gib);
+    }
+    _minFreeDiskGiB->setValue(gib);
+}
+
+///////////////////////////////////////////////////
+
+double
+Settings::getUnreachableRamPercent() const
+{
+    return (double)_unreachableRAMPercent->getValue() / 100.;
+}
+
+bool
+Settings::getColorPickerLinear() const
+{
+    return _linearPickers->getValue();
+}
+
+int
+Settings::getNumberOfThreadsPerEffect() const
+{
+    return _nThreadsPerEffect->getValue();
+}
+
+int
+Settings::getNumberOfThreads() const
+{
+    return _numberOfThreads->getValue();
+}
+
+void
+Settings::setNumberOfThreads(int threadsNb)
+{
+    _numberOfThreads->setValue(threadsNb);
+}
+
+bool
+Settings::isAutoPreviewOnForNewProjects() const
+{
+    return _autoPreviewEnabledForNewProjects->getValue();
+}
+
+#ifdef NATRON_DOCUMENTATION_ONLINE
+int
+Settings::getDocumentationSource() const
+{
+    return _documentationSource->getValue();
+}
+#endif
+
+int
+Settings::getServerPort() const
+{
+    return _wwwServerPort->getValue();
+}
+
+void
+Settings::setServerPort(int port) const
+{
+    _wwwServerPort->setValue(port);
+}
+
+bool
+Settings::isAutoScrollEnabled() const
+{
+    return _autoScroll->getValue();
+}
