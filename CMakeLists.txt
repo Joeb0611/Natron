@@ -18,7 +18,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Natron.  If not, see <https://www.gnu.org/licenses/gpl-2.0.html>
+# along with Natron.  If not, see <http://www.gnu.org/licenses/gpl-2.0.html>
 # ***** END LICENSE BLOCK *****
 
 cmake_minimum_required(VERSION 3.16.7)
@@ -81,6 +81,18 @@ if(NATRON_TSAN)
     message(STATUS "ThreadSanitizer enabled")
 endif()
 
+# Ubuntu MinGW gcc-13 cannot link MSYS2's static Boost (built with gcc 16:
+# __cxa_call_terminate). Use the shared import library so those symbols stay
+# inside libboost_serialization-mt.dll.
+if(WIN32 AND CMAKE_CXX_COMPILER MATCHES "x86_64-w64-mingw32" AND NATRON_MINGW64)
+    set(_np_boost_ser "${NATRON_MINGW64}/lib/cmake/boost_serialization-1.92.0-shared")
+    if(EXISTS "${_np_boost_ser}/boost_serialization-config.cmake")
+        set(Boost_USE_STATIC_LIBS OFF)
+        set(boost_serialization_DIR "${_np_boost_ser}" CACHE PATH
+            "MSYS2 shared Boost.Serialization" FORCE)
+    endif()
+    unset(_np_boost_ser)
+endif()
 find_package(Boost COMPONENTS headers serialization CONFIG)
 if(WIN32)
     # Prevent looking in the registry so that the MinGW python can be found.
@@ -151,16 +163,37 @@ endif()
 
 # When cross-compiling from Linux, Qt/Shiboken IMPORTED tools are .exe files.
 # Point them at Unix wrappers so AUTOMOC / shiboken custom commands can run.
+# Config-specific IMPORTED_LOCATION_<CONFIG> (e.g. RELEASE) overrides the
+# generic IMPORTED_LOCATION, so set every variant.
 if(NATRON_WINE_TOOLS_DIR)
+    set(_np_locs
+        IMPORTED_LOCATION
+        IMPORTED_LOCATION_RELEASE
+        IMPORTED_LOCATION_RELWITHDEBINFO
+        IMPORTED_LOCATION_MINSIZEREL
+        IMPORTED_LOCATION_DEBUG
+    )
     foreach(_np_tool IN ITEMS moc rcc qmake)
         if(TARGET Qt5::${_np_tool} AND EXISTS "${NATRON_WINE_TOOLS_DIR}/${_np_tool}")
-            set_target_properties(Qt5::${_np_tool} PROPERTIES
-                IMPORTED_LOCATION "${NATRON_WINE_TOOLS_DIR}/${_np_tool}")
+            foreach(_np_loc IN LISTS _np_locs)
+                set_property(TARGET Qt5::${_np_tool} PROPERTY ${_np_loc}
+                    "${NATRON_WINE_TOOLS_DIR}/${_np_tool}")
+            endforeach()
         endif()
     endforeach()
+    # Prefer the in-tree moc wrapper: it strips metaobjects moc emitted from
+    # included headers (duplicate NodeGroup / OutputEffectInstance on MinGW).
+    if(TARGET Qt5::moc AND EXISTS "${CMAKE_SOURCE_DIR}/tools/mingw-moc.sh")
+        foreach(_np_loc IN LISTS _np_locs)
+            set_property(TARGET Qt5::moc PROPERTY ${_np_loc}
+                "${CMAKE_SOURCE_DIR}/tools/mingw-moc.sh")
+        endforeach()
+    endif()
     if(TARGET Shiboken2::shiboken2 AND EXISTS "${NATRON_WINE_TOOLS_DIR}/shiboken2")
-        set_target_properties(Shiboken2::shiboken2 PROPERTIES
-            IMPORTED_LOCATION "${NATRON_WINE_TOOLS_DIR}/shiboken2")
+        foreach(_np_loc IN LISTS _np_locs)
+            set_property(TARGET Shiboken2::shiboken2 PROPERTY ${_np_loc}
+                "${NATRON_WINE_TOOLS_DIR}/shiboken2")
+        endforeach()
     endif()
     if(TARGET Qt5::moc)
         get_target_property(QT_MOC_EXECUTABLE Qt5::moc LOCATION)
@@ -168,6 +201,8 @@ if(NATRON_WINE_TOOLS_DIR)
         set(Qt5Core_RCC_EXECUTABLE Qt5::rcc)
     endif()
     unset(_np_tool)
+    unset(_np_loc)
+    unset(_np_locs)
 endif()
 
 if(IS_DEBUG_BUILD AND WIN32)
@@ -231,6 +266,14 @@ enable_testing()
 add_subdirectory(libs)
 
 add_subdirectory(HostSupport)
+
+# Linux MinGW (Ubuntu gcc + MSYS2 Qt/Python sysroot): search the compiler CRT
+# before ${MINGW64}/include so wchar.h/stdlib.h are not mixed.
+if(WIN32 AND CMAKE_CXX_COMPILER MATCHES "x86_64-w64-mingw32")
+    include_directories(BEFORE SYSTEM
+        /usr/x86_64-w64-mingw32/include
+        /usr/share/mingw-w64/include)
+endif()
 
 add_subdirectory(Engine)
 

@@ -48,7 +48,7 @@ execute_process(COMMAND ${Python3_EXECUTABLE} ../tools/utils/sourceList.py types
     OUTPUT_VARIABLE PyEngine_SOURCES)
 set_property(SOURCE ${PyEngine_SOURCES} PROPERTY SKIP_AUTOGEN ON)
 add_custom_command(OUTPUT ${PyEngine_SOURCES}
-    COMMAND $<TARGET_FILE:${SHIBOKEN_EXE}> ${shiboken_args}
+    COMMAND ${SHIBOKEN_EXE} ${shiboken_args}
     COMMAND ${Python3_EXECUTABLE} ../tools/utils/sourceCleanup.py typesystem_engine.xml ${PYENGINE_OUT}
     DEPENDS ${SHIBOKEN_EXE} ${PYENGINE_HEADER} ${NatronEngine_HEADERS} ../tools/utils/sourceCleanup.py typesystem_engine.xml
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
@@ -62,6 +62,12 @@ if(UNIX AND NOT APPLE)
 endif()
 
 
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/libs/SequenceParsing/tinydir/tinydir.h")
+    message(FATAL_ERROR
+        "Nested submodule libs/SequenceParsing/tinydir is missing (tinydir.h). "
+        "Run: git submodule update --init --recursive")
+endif()
+
 list(APPEND NatronEngine_SOURCES
     ${NatronEngine_SOURCES}
     ${PyEngine_SOURCES}
@@ -72,6 +78,29 @@ list(APPEND NatronEngine_SOURCES
     ../Global/StrUtils.cpp
     ../libs/SequenceParsing/SequenceParsing.cpp
 )
+
+# AUTOMOC of ViewerInstancePrivate.h also emits every QObject pulled in via
+# ViewerInstance.h. Keep the nested ViewerInstancePrivate metaobject only.
+set_property(SOURCE ViewerInstancePrivate.h PROPERTY SKIP_AUTOMOC ON)
+set(_np_vip_full "${CMAKE_CURRENT_BINARY_DIR}/moc_ViewerInstancePrivate_full.cpp")
+set(_np_vip_nested "${CMAKE_CURRENT_BINARY_DIR}/moc_ViewerInstancePrivate_nested.cpp")
+add_custom_command(OUTPUT "${_np_vip_nested}"
+    COMMAND Qt5::moc
+        "${CMAKE_CURRENT_SOURCE_DIR}/ViewerInstancePrivate.h"
+        -I "${CMAKE_CURRENT_SOURCE_DIR}"
+        -I "${CMAKE_CURRENT_SOURCE_DIR}/.."
+        -I "${CMAKE_CURRENT_SOURCE_DIR}/../Global"
+        -o "${_np_vip_full}"
+    COMMAND /usr/bin/python3 "${CMAKE_SOURCE_DIR}/tools/extract-nested-moc.py"
+        "${_np_vip_full}" "${_np_vip_nested}"
+        Natron__ViewerInstance__ViewerInstancePrivate
+    DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/ViewerInstancePrivate.h"
+        "${CMAKE_SOURCE_DIR}/tools/extract-nested-moc.py"
+    VERBATIM)
+list(APPEND NatronEngine_SOURCES "${_np_vip_nested}")
+set_property(SOURCE "${_np_vip_nested}" PROPERTY SKIP_AUTOGEN ON)
+
 add_library(NatronEngine STATIC ${NatronEngine_HEADERS} ${NatronEngine_SOURCES})
 target_link_libraries(NatronEngine
     PUBLIC
