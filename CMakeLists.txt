@@ -92,9 +92,16 @@ if(WIN32)
 endif()
 find_package(Python3 COMPONENTS Interpreter Development)
 if(Python3_EXECUTABLE)
-    # Shiboken2 still calls FindPythonInterp. Pin it to the same CPython
-    # Natron linked so a newer Homebrew python3 (e.g. 3.14) is not picked.
+    # Shiboken2 still calls FindPythonInterp/FindPythonLibs. Pin both to the
+    # same CPython Natron linked so a newer Homebrew python3 (e.g. 3.14) is
+    # not mixed into include paths on macOS.
     set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+    if(Python3_INCLUDE_DIRS)
+        list(GET Python3_INCLUDE_DIRS 0 PYTHON_INCLUDE_DIR)
+    endif()
+    if(Python3_LIBRARIES)
+        set(PYTHON_LIBRARY "${Python3_LIBRARIES}")
+    endif()
 endif()
 
 # png/ico are generated (MCP/git cannot safely round-trip those binaries).

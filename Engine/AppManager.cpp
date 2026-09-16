@@ -77,7 +77,7 @@
 #include <sys/sysctl.h>
 #include <libproc.h>
 #endif
-#if defined(Q_OS_LINUX) || defined(Q_OS_FREEBSD)
+#if defined(Q_OS_LINUX) || defined(Q_OS_FREEBSD) || defined(Q_OS_DARWIN)
 #include <sys/statvfs.h>
 #endif
 #endif
@@ -1181,3 +1181,6 @@ AppManagerPrivate::setViewerCacheTileSize()
 #include "AppManagerPart1.inc"
 #include "AppManagerPart2.inc"
 #include "AppManagerPart3.inc"
+
+NATRON_NAMESPACE_USING
+#include "moc_AppManager.cpp"
