@@ -1,7 +1,11 @@
 /* ***** BEGIN LICENSE BLOCK *****
- * This file is part of Natron <https://natrongithub.github.io/>,
+ * This file is part of Natron+ <https://github.com/Joeb0611/Natron>,
+ * a fork of Natron <https://natrongithub.github.io/>.
+ * (C) 2026 Natron+ contributors
  * (C) 2018-2023 The Natron developers
  * (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+ *
+ * Modified 2026-09-16: free-disk cache API.
  *
  * Natron is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -351,6 +355,15 @@ public:
      * WARNING: This function may remove some entries from the caches.
      **/
     void checkCacheFreeMemoryIsGoodEnough();
+
+    /**
+     * @brief True if extraBytes plus the configured minimum-free-disk reserve still fit on the cache volume.
+     * Never throws; a false return means the caller must refuse to grow the disk cache.
+     **/
+    bool hasEnoughFreeDiskForCache(std::size_t extraBytes) const;
+
+    /// Bytes free on the filesystem that holds path, or 0 if unknown.
+    static U64 freeDiskBytesAt(const QString& path);
 
     void onCheckerboardSettingsChanged() { Q_EMIT checkerboardSettingsChanged(); }
 
@@ -841,4 +854,3 @@ NATRON_NAMESPACE_EXIT
 
 
 #endif // Engine_AppManager_h
-
