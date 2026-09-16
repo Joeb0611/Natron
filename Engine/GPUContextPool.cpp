@@ -1,7 +1,11 @@
 /* ***** BEGIN LICENSE BLOCK *****
- * This file is part of Natron <https://natrongithub.github.io/>,
+ * This file is part of Natron+ <https://github.com/Joeb0611/Natron>,
+ * a fork of Natron <https://natrongithub.github.io/>.
+ * (C) 2026 Natron+ contributors
  * (C) 2018-2023 The Natron developers
  * (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+ *
+ * Modified 2026-09-16: catch OpenGL context creation failure instead of aborting.
  *
  * Natron is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,9 +31,12 @@
 
 #include <set>
 #include <stdexcept>
+#include <iostream>
 
 #include <QMutex>
 #include <QWaitCondition>
+
+#include "Global/Macros.h"
 
 #include "Engine/AppManager.h"
 #include "Engine/OSGLContext.h"
@@ -122,8 +129,13 @@ GPUContextPool::attachGLContextToRender(bool checkIfGLLoaded)
     }
     if ( _imp->glContextPool.empty() ) {
         assert( (int)_imp->attachedGLContexts.size() < maxContexts );
-        //  Create a new one
-        newContext = std::make_shared<OSGLContext>( FramebufferConfig(), shareContext.get(), GLVersion.major, GLVersion.minor, rendererID );
+        try {
+            newContext = std::make_shared<OSGLContext>( FramebufferConfig(), shareContext.get(), GLVersion.major, GLVersion.minor, rendererID );
+        } catch (const std::exception& e) {
+            std::cerr << NATRON_APPLICATION_NAME << ": OpenGL context creation failed: " << e.what() << std::endl;
+            std::cerr << NATRON_APPLICATION_NAME << ": GPU rendering is disabled; the application will keep running on CPU." << std::endl;
+            return OSGLContextPtr();
+        }
     } else {
         std::set<OSGLContextPtr>::iterator it = _imp->glContextPool.begin();
         newContext = *it;
@@ -133,9 +145,14 @@ GPUContextPool::attachGLContextToRender(bool checkIfGLLoaded)
 #else
 
     if ( (int)_imp->glContextPool.size() < maxContexts ) {
-        //  Create a new one
-        newContext = std::make_shared<OSGLContext>( FramebufferConfig(), shareContext.get(), GLVersion.major, GLVersion.minor, rendererID );
-        _imp->glContextPool.insert(newContext);
+        try {
+            newContext = std::make_shared<OSGLContext>( FramebufferConfig(), shareContext.get(), GLVersion.major, GLVersion.minor, rendererID );
+            _imp->glContextPool.insert(newContext);
+        } catch (const std::exception& e) {
+            std::cerr << NATRON_APPLICATION_NAME << ": OpenGL context creation failed: " << e.what() << std::endl;
+            std::cerr << NATRON_APPLICATION_NAME << ": GPU rendering is disabled; the application will keep running on CPU." << std::endl;
+            return OSGLContextPtr();
+        }
     } else {
         while ((int)_imp->glContextPool.size() > maxContexts) {
             _imp->glContextPool.erase(_imp->glContextPool.begin());
@@ -162,7 +179,9 @@ GPUContextPool::attachGLContextToRender(bool checkIfGLLoaded)
     }
 
 #endif //NATRON_RENDER_SHARED_CONTEXT
-    assert(newContext);
+    if (!newContext) {
+        return OSGLContextPtr();
+    }
 
     if (settings) {
         if (!_imp->currentOpenGLRendererMaxTexSize) {
