@@ -549,7 +549,7 @@ AppManager::getAllNonOFXPluginsPaths() const
 
     //add ~/.Natron
     QString dataLocation = QDir::homePath();
-    QString mainPath = dataLocation + QString::fromUtf8("/." ) + QString::fromUtf8(NATRON_APPLICATION_NAME);
+    QString mainPath = dataLocation + QString::fromUtf8("/.") + QString::fromUtf8(NATRON_APPLICATION_NAME);
     QDir mainPathDir(mainPath);
 
     if ( !mainPathDir.exists() ) {
