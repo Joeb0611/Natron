@@ -1229,3 +1229,6 @@ OutputSchedulerThread::stopRender()
 #include "OutputSchedulerThreadPart1.inc"
 #include "OutputSchedulerThreadPart2.inc"
 #include "OutputSchedulerThreadPart3.inc"
+
+NATRON_NAMESPACE_USING
+#include "moc_OutputSchedulerThread.cpp"

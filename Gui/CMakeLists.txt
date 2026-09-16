@@ -38,6 +38,7 @@ set(shiboken_args
     "-std=c++17" "--enable-parent-ctor-heuristic" "--use-isnull-as-nb_nonzero"
     "--avoid-protected-hack" "--enable-pyside-extensions"
     ${PYGUI_INCS}
+    ${SHIBOKEN_PLATFORM_ARGS}
     "-T../Engine" "-T${PYSIDE_TYPESYSTEMS}" "--output-directory=${PYGUI_OUT}"
     "${PYGUI_HEADER}" "typesystem_natronGui.xml")
 

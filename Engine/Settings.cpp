@@ -572,3 +572,6 @@ Settings::initializeKnobsDocumentation()
 #include "SettingsPart3.inc"
 #include "SettingsPart4.inc"
 #include "SettingsPart5.inc"
+
+NATRON_NAMESPACE_USING
+#include "moc_Settings.cpp"

@@ -32,6 +32,12 @@ project(Natron
 
 set(CMAKE_CXX_STANDARD 17)
 
+# Native arch by default so Apple Silicon (arm64) is first-class and not
+# accidentally built as x86_64. Override with -DCMAKE_OSX_ARCHITECTURES=.
+if(APPLE AND NOT CMAKE_OSX_ARCHITECTURES)
+    set(CMAKE_OSX_ARCHITECTURES "${CMAKE_HOST_SYSTEM_PROCESSOR}" CACHE STRING "macOS target architecture")
+endif()
+
 include(GNUInstallDirs)
 
 option(NATRON_QT6 "use Qt6" OFF)
@@ -85,6 +91,18 @@ if(WIN32)
     set(Python3_FIND_REGISTRY NEVER)
 endif()
 find_package(Python3 COMPONENTS Interpreter Development)
+if(Python3_EXECUTABLE)
+    # Shiboken2 still calls FindPythonInterp/FindPythonLibs. Pin both to the
+    # same CPython Natron linked so a newer Homebrew python3 (e.g. 3.14) is
+    # not mixed into include paths on macOS.
+    set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+    if(Python3_INCLUDE_DIRS)
+        list(GET Python3_INCLUDE_DIRS 0 PYTHON_INCLUDE_DIR)
+    endif()
+    if(Python3_LIBRARIES)
+        set(PYTHON_LIBRARY "${Python3_LIBRARIES}")
+    endif()
+endif()
 
 # png/ico are generated (MCP/git cannot safely round-trip those binaries).
 # The committed natronplusIcon.xpm is the Qt resource; this fills raster
@@ -145,6 +163,29 @@ else()
     set(SHIBOKEN_EXE Shiboken2::shiboken2)
     set(SHIBOKEN_LIB Shiboken2::libshiboken)
     set(PYSIDE_LIB PySide2::pyside2)
+
+    # Homebrew/macOS Qt5 is framework-based. Shiboken includes
+    # <QtCore/qnamespace.h>, but Qt5 CMake only adds the framework Headers
+    # directory (bare qnamespace.h). Prepend prefix/include and pass -F so
+    # Apple Silicon and Intel Homebrew/MacPorts Qt5 both resolve.
+    if(APPLE)
+        get_filename_component(_NATRON_QT5_PREFIX "${Qt5Core_DIR}/../../.." ABSOLUTE)
+        set(_NATRON_QT5_INCLUDE "${_NATRON_QT5_PREFIX}/include")
+        if(EXISTS "${_NATRON_QT5_INCLUDE}/QtCore")
+            list(INSERT QTCORE_INCLUDE_DIRS 0 "${_NATRON_QT5_INCLUDE}")
+            list(INSERT QTGUI_INCLUDE_DIRS 0 "${_NATRON_QT5_INCLUDE}")
+            list(INSERT QTWIDGETS_INCLUDE_DIRS 0 "${_NATRON_QT5_INCLUDE}")
+            message(STATUS "macOS Qt5 shiboken include prefix: ${_NATRON_QT5_INCLUDE}")
+        endif()
+        if(EXISTS "${_NATRON_QT5_PREFIX}/lib/QtCore.framework")
+            list(APPEND SHIBOKEN_PLATFORM_ARGS "-F${_NATRON_QT5_PREFIX}/lib")
+            message(STATUS "macOS Qt5 shiboken framework path: ${_NATRON_QT5_PREFIX}/lib")
+        endif()
+    endif()
+endif()
+
+if(NOT DEFINED SHIBOKEN_PLATFORM_ARGS)
+    set(SHIBOKEN_PLATFORM_ARGS "")
 endif()
 
 if(IS_DEBUG_BUILD AND WIN32)
@@ -152,6 +193,15 @@ if(IS_DEBUG_BUILD AND WIN32)
     get_property(SHIBOKEN_DEFS TARGET ${SHIBOKEN_LIB} PROPERTY INTERFACE_COMPILE_DEFINITIONS)
     list(REMOVE_ITEM SHIBOKEN_DEFS NDEBUG)
     set_property(TARGET ${SHIBOKEN_LIB} PROPERTY INTERFACE_COMPILE_DEFINITIONS SHIBOKEN_DEFS)
+endif()
+
+# Homebrew macOS PySide2 is built with FORCE_LIMITED_API. That define leaks
+# through Shiboken2::libshiboken into Natron TUs that need PyRun_String.
+if(APPLE AND TARGET "${SHIBOKEN_LIB}")
+    get_property(_NATRON_SK_DEFS TARGET ${SHIBOKEN_LIB} PROPERTY INTERFACE_COMPILE_DEFINITIONS)
+    list(FILTER _NATRON_SK_DEFS EXCLUDE REGEX "^Py_LIMITED_API")
+    set_property(TARGET ${SHIBOKEN_LIB} PROPERTY INTERFACE_COMPILE_DEFINITIONS ${_NATRON_SK_DEFS})
+    message(STATUS "macOS: dropped Py_LIMITED_API from ${SHIBOKEN_LIB} interface defines")
 endif()
 
 #Since in Natron and OpenFX all strings are supposed UTF-8 and that the constructor

@@ -28,8 +28,20 @@
 
 #include "Global/Macros.h"
 
+#ifndef Q_MOC_RUN
 #include "ViewerInstance.h"
+#else
+#include <QObject>
+namespace Natron {
+class ViewerInstance : public QObject
+{
+public:
+    struct ViewerInstancePrivate;
+};
+}
+#endif
 
+#ifndef Q_MOC_RUN
 #include <map>
 #include <set>
 #include <vector>
@@ -51,6 +63,7 @@
 #include "Engine/Image.h"
 #include "Engine/TextureRect.h"
 #include "Engine/EngineFwd.h"
+#endif
 
 #define GAMMA_LUT_NB_VALUES 1023
 

@@ -68,6 +68,15 @@ namespace Python { }
 #define NATRON_PYTHON_NAMESPACE_EXIT }
 #endif
 
+#ifdef Q_MOC_RUN
+// moc follows #includes and would emit every Q_OBJECT base class in derived
+// TUs. Apple ld then fails with duplicate staticMetaObject / vtable.
+#include <QObject>
+#define NATRON_MOC_STUB_QOBJECT(Class) namespace Natron { class Class : public QObject {}; }
+#else
+#define NATRON_MOC_STUB_QOBJECT(Class)
+#endif
+
 #define NATRON_NAMESPACE_ANONYMOUS_ENTER namespace {
 #define NATRON_NAMESPACE_ANONYMOUS_EXIT }
 

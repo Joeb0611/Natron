@@ -37,7 +37,11 @@ CLANG_DIAG_OFF(uninitialized)
 CLANG_DIAG_ON(deprecated)
 CLANG_DIAG_ON(uninitialized)
 
+#ifndef Q_MOC_RUN
 #include "Engine/OutputEffectInstance.h"
+#else
+NATRON_MOC_STUB_QOBJECT(OutputEffectInstance)
+#endif
 #include "Engine/ViewIdx.h"
 #include "Engine/EngineFwd.h"
 

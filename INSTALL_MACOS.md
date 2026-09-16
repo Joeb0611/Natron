@@ -574,14 +574,36 @@ launchctl setenv PATH /opt/local/bin:/opt/local/sbin:/usr/bin:/bin:/usr/sbin:/sb
 
 ## Building with cmake (Qt5 only)
 
-### On homebrew
+Linux, macOS (including Apple Silicon), and Windows are first-class CMake
+targets. On Apple Silicon, configure without forcing `x86_64` — the tree
+defaults `CMAKE_OSX_ARCHITECTURES` to the host arch (`arm64` on M-series).
+
+### On homebrew (Apple Silicon and Intel)
+
+Homebrew `qt@5` is keg-only. Homebrew removed `pyside@2` after Qt 5 went EOL;
+Natron+ still needs PySide2 5.15 for this CMake path. Install the last
+`pyside@2` 5.15.x formula (arm64 bottles exist; they run on later macOS) or
+build it from source against `qt@5` and `python@3.10`.
 
 ```Shell
+brew install cmake pkgconf qt@5 python@3.10 boost cairo expat
+# pyside@2 is no longer in homebrew-core; install the last 5.15.x formula
+# into a local tap, or build pyside-setup 5.15 against qt@5 + python@3.10.
+
 mkdir build
 cd build
-cmake .. -DCMAKE_PREFIX_PATH="/opt/homebrew/opt/expat;/opt/homebrew/opt/qt@5;/opt/homebrew/opt/pyside@2" -DPYTHON_FRAMEWORK_LIBRARIES=/opt/homebrew/Frameworks/Python.framework/Versions/3.9/lib
-make -j
+cmake .. \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH="/opt/homebrew/opt/expat;/opt/homebrew/opt/qt@5;/opt/homebrew/opt/pyside@2;/opt/homebrew/opt/boost" \
+  -DPython3_EXECUTABLE="$(brew --prefix python@3.10)/bin/python3.10" \
+  -DPython3_ROOT_DIR="$(brew --prefix python@3.10)" \
+  -DPYTHON_FRAMEWORK_LIBRARIES="$(brew --prefix python@3.10)/Frameworks/Python.framework/Versions/3.10/lib"
+cmake --build . --parallel
 ```
+
+`CMAKE_OSX_ARCHITECTURES` defaults to the host CPU (`arm64` on Apple Silicon).
+Pass `-DCMAKE_OSX_ARCHITECTURES=x86_64` only when you intentionally want a
+Rosetta build.
 
 ## Testing
 
