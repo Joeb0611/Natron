@@ -1,44 +1,11 @@
+# Neutralized: branding remainder paused; this workflow was fail-mailing on push.
 name: Apply Slice 1 branding remainder
-
 on:
-  workflow_dispatch: {}
-  push:
-    branches: [main]
-    paths:
-      - tools/apply-slice1-branding.py
-      - tools/generate-natronplus-icons.py
-      - .github/workflows/apply-slice1-branding.yml
-
+  workflow_dispatch:
 jobs:
-  apply:
+  disabled:
+    name: Neutralized
+    if: false
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - uses: actions/checkout@v4.1.1
-      - name: Patch product strings
-        run: python3 tools/apply-slice1-branding.py
-      - name: Generate Natron+ icons
-        run: python3 tools/generate-natronplus-icons.py
-      - name: Commit branding remainder
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Global/Macros.h CMakeLists.txt Gui/AboutWindow.cpp \
-                  CrashReporter/CrashDialog.cpp CrashReporter/CallbacksManager.cpp \
-                  Gui/GuiResources.qrc global.pri \
-                  tools/appimage/make-appimage.sh \
-                  tools/jenkins/include/natron/Natron2.desktop \
-                  tools/buildmaster/include/natron/Natron2.desktop \
-                  .github/workflows/build_installer.yml \
-                  Gui/Resources/Images/natronplusIcon.xpm \
-                  Gui/Resources/Images/natronplusIcon256.png \
-                  Gui/Resources/Images/natronplusIcon256.ico \
-                  Gui/Resources/Images/natronIcon256_linux.png \
-                  Gui/Resources/Images/natronIcon256_windows.ico
-          if git diff --cached --quiet; then
-            echo No branding remainder
-          else
-            git commit -m "Slice 1: Natron+ macros, About/crash strings, icons, installer CI"
-            git push
-          fi
+      - run: echo neutralized

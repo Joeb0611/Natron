@@ -1,25 +1,15 @@
+# Owned Natron+ CI. Manual dispatch only.
+# Jobs stay skipped until repository variable NATRONPLUS_CI_ENABLED=true
+# so this workflow cannot fail-mail before it can actually build.
 name: CMake build
 
 on:
-  workflow_dispatch: {}
-  push:
-    branches:
-      - main
-      - RB-2.6
-    paths-ignore:
-      - 'Documentation/**'
-      - '**.md'
-  pull_request:
-    branches:
-      - main
-      - RB-2.6
-    paths-ignore:
-      - 'Documentation/**'
-      - '**.md'
+  workflow_dispatch:
 
 jobs:
   linux-cmake:
     name: Linux CMake configure + build
+    if: ${{ vars.NATRONPLUS_CI_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     env:
       CI: 'True'
@@ -38,13 +28,13 @@ jobs:
             libwayland-dev libwayland-client0 libwayland-egl1 \
             extra-cmake-modules
       - name: CMake configure
-        run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DNATRON_BUILD_TESTS=OFF
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DNATRON_BUILD_TESTS=OFF
       - name: CMake build
         run: cmake --build build --parallel 2
 
   windows-cmake:
     name: Windows CMake configure + build
+    if: ${{ vars.NATRONPLUS_CI_ENABLED == 'true' }}
     runs-on: windows-latest
     defaults:
       run:
@@ -67,7 +57,6 @@ jobs:
           ${GITHUB_WORKSPACE}/.github/workflows/install_natron_pacman_repo.sh ${GITHUB_WORKSPACE} ${GITHUB_WORKSPACE}/natron_pacman_repo
           pacman -S --needed --noconfirm --overwrite "*" mingw-w64-x86_64-natron-build-deps-qt5
       - name: CMake configure
-        run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DNATRON_BUILD_TESTS=OFF
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DNATRON_BUILD_TESTS=OFF
       - name: CMake build
         run: cmake --build build --parallel 2
