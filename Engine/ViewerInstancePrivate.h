@@ -28,7 +28,18 @@
 
 #include "Global/Macros.h"
 
+#ifndef Q_MOC_RUN
 #include "ViewerInstance.h"
+#else
+#include <QObject>
+namespace Natron {
+class ViewerInstance : public QObject
+{
+public:
+    struct ViewerInstancePrivate;
+};
+}
+#endif
 
 #ifndef Q_MOC_RUN
 #include <map>

@@ -81,10 +81,6 @@ list(APPEND NatronEngine_SOURCES
     ../libs/SequenceParsing/SequenceParsing.cpp
 )
 add_library(NatronEngine STATIC ${NatronEngine_HEADERS} ${NatronEngine_SOURCES})
-# ViewerInstancePrivate.h includes ViewerInstance.h; AUTOMOC of both plus
-# #include moc_*.cpp in the same TU redefines ViewerInstance meta objects.
-# Private's moc already emits ViewerInstance (nested Q_OBJECT).
-set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ViewerInstance.h" PROPERTY SKIP_AUTOMOC ON)
 target_link_libraries(NatronEngine
     PUBLIC
         HostSupport
