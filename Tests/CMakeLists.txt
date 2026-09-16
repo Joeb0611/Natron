@@ -1,7 +1,11 @@
 # ***** BEGIN LICENSE BLOCK *****
-# This file is part of Natron <https://natrongithub.github.io/>,
+# This file is part of Natron+ <https://github.com/Joeb0611/Natron>,
+# a fork of Natron <https://natrongithub.github.io/>.
+# (C) 2026 Natron+ contributors
 # (C) 2018-2023 The Natron developers
 # (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+#
+# Modified 2026-09-16: SchedulerAbort stall/zero-frame regression.
 #
 # Natron is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,6 +36,7 @@ set(Tests_SOURCES
     Tracker_Test.cpp
     CacheLimits_Test.cpp
     AppLifecycle_Test.cpp
+    SchedulerAbort_Test.cpp
     wmain.cpp
 )
 add_executable(Tests ${Tests_HEADERS} ${Tests_SOURCES})
