@@ -51,7 +51,7 @@ run-without-python {
       PYTHON_CONFIG_FLAGS=
     }
     # PYVER contains just major.minor
-    PYVER=$$system(python$$PYV -c \"import platform; print(\'.\'.join(platform.python_version_tuple()[:2]))\")
+    PYVER=$$system(python$$PYV -c \"import platform; print('.' .join(platform.python_version_tuple()[:2]))\")
     PYVERNODOT=$$replace(PYVER,\\.,)
     # PYTHON_VERSION contains major.minor.micro
     PYTHON_VERSION=$$system(python$$PYV -c \"import platform; print(platform.python_version())\")
@@ -543,13 +543,13 @@ unix:!macx {
     }
     target.path = $${PREFIX}/bin
     target_icons.path = $${PREFIX}/share/pixmaps
-    target_icons.files = $PWD/../Gui/Resources/Images/natronIcon256_linux.png $PWD/../Gui/Resources/Images/natronProjectIcon_linux.png
+    target_icons.files = $PWD/../Gui/Resources/Images/natronplusIcon.xpm $PWD/../Gui/Resources/Images/natronplusIcon256.png $PWD/../Gui/Resources/Images/natronProjectIcon_linux.png
     target_mime.path = $${PREFIX}/share/mime/packages
     target_mime.files = $PWD/../Gui/Resources/Mime/x-natron.xml
     target_desktop.path = $${PREFIX}/share/applications
-    target_desktop.files = $PWD/../Gui/Resources/Applications/fr.natron.Natron.desktop
+    target_desktop.files = $PWD/../Gui/Resources/Applications/io.github.joeb0611.natronplus.desktop
     target_appdata.path = $${PREFIX}/share/metainfo
-    target_appdata.files = $PWD/../Gui/Resources/Metainfo/fr.natron.Natron.appdata.xml
+    target_appdata.files = $PWD/../Gui/Resources/Metainfo/io.github.joeb0611.natronplus.appdata.xml
     INSTALLS += target_icons target_mime target_desktop target_appdata
 }
 
