@@ -1,7 +1,11 @@
 /* ***** BEGIN LICENSE BLOCK *****
- * This file is part of Natron <https://natrongithub.github.io/>,
+ * This file is part of Natron+ <https://github.com/Joeb0611/Natron>,
+ * a fork of Natron <https://natrongithub.github.io/>.
+ * (C) 2026 Natron+ contributors
  * (C) 2018-2023 The Natron developers
  * (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+ *
+ * Modified 2026-09-16: Natron+ splash (no upstream lettermark).
  *
  * Natron is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +36,9 @@ CLANG_DIAG_OFF(deprecated)
 #include <QPainter>
 #include <QStyleOption>
 #include <QApplication>
+#include <QFont>
+#include <QPen>
+#include <QBrush>
 
 #include <QScreen>
 
@@ -43,7 +50,7 @@ CLANG_DIAG_ON(deprecated)
 
 NATRON_NAMESPACE_ENTER
 
-SplashScreen::SplashScreen(const QString & filePath)
+SplashScreen::SplashScreen(const QString & /*filePath*/)
     : QWidget(0, Qt::FramelessWindowHint)
     , _pixmap()
     , _text()
@@ -75,11 +82,37 @@ SplashScreen::SplashScreen(const QString & filePath)
     setAttribute( Qt::WA_TransparentForMouseEvents );
     setAttribute(Qt::WA_TranslucentBackground, true);
 
-    _pixmap.load(filePath);
+    // Draw a Natron+ splash instead of shipping the upstream Natron lettermark.
     _scale = 1.;
-    if (_scale != 1.) {
-        _pixmap = _pixmap.scaled( int(_pixmap.width() * _scale), int(_pixmap.height() * _scale),
-                                 Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    const int w = int(720 * _scale);
+    const int h = int(400 * _scale);
+    _pixmap = QPixmap(w, h);
+    _pixmap.fill(Qt::transparent);
+    {
+        QPainter gp(&_pixmap);
+        gp.setRenderHint(QPainter::Antialiasing, true);
+        gp.setBrush( QColor(20, 22, 28) );
+        gp.setPen( QPen(QColor(200, 176, 122), 3) );
+        gp.drawRoundedRect( QRectF(1, 1, w - 2, h - 2), 18, 18 );
+        const QRectF plusV( w / 2. - 14, 56, 28, 112 );
+        const QRectF plusH( w / 2. - 56, 98, 112, 28 );
+        gp.setBrush( QColor(232, 217, 168) );
+        gp.setPen(Qt::NoPen);
+        gp.drawRoundedRect(plusV, 6, 6);
+        gp.drawRoundedRect(plusH, 6, 6);
+        gp.setPen( QColor(232, 217, 168) );
+        QFont title = gp.font();
+        title.setPointSize(28);
+        title.setBold(true);
+        gp.setFont(title);
+        gp.drawText( QRect(0, 180, w, 48), Qt::AlignHCenter, QString::fromUtf8(NATRON_APPLICATION_NAME) );
+        QFont sub = gp.font();
+        sub.setPointSize(11);
+        sub.setBold(false);
+        gp.setFont(sub);
+        gp.setPen( QColor(180, 184, 192) );
+        gp.drawText( QRect(40, 228, w - 80, 40), Qt::AlignHCenter,
+                     tr("Independent fork of Natron — not an official Natron Project build") );
     }
     resize( _pixmap.width(), _pixmap.height() );
     {
@@ -118,9 +151,10 @@ SplashScreen::paintEvent(QPaintEvent*)
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 
     p.drawPixmap(0, 0, _pixmap);
-    p.setPen(Qt::white);
-    p.drawText(QPointF(120 * _scale, 100 * _scale), _text);
-    p.drawText(QPointF(20 * _scale, _pixmap.height() - 15 * _scale), _versionString);
+    p.setPen( QColor(232, 217, 168) );
+    p.drawText(QPointF(40 * _scale, 280 * _scale), _text);
+    p.setPen( QColor(180, 184, 192) );
+    p.drawText(QPointF(40 * _scale, _pixmap.height() - 24 * _scale), _versionString);
 }
 
 LoadProjectSplashScreen::LoadProjectSplashScreen(const QString & filePath)
@@ -132,13 +166,29 @@ LoadProjectSplashScreen::LoadProjectSplashScreen(const QString & filePath)
     setAttribute( Qt::WA_TransparentForMouseEvents );
     setAttribute(Qt::WA_TranslucentBackground, true);
 
-    _pixmap.load( QString::fromUtf8(":Resources/Images/loadProjectSplashscreen.png") );
-
     _scale = 1.;
-    if (_scale != 1.) {
-        _pixmap = _pixmap.scaled( int(_pixmap.width() * _scale), int(_pixmap.height() * _scale),
-                                 Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    const int w = int(720 * _scale);
+    const int h = int(220 * _scale);
+    _pixmap = QPixmap(w, h);
+    _pixmap.fill(Qt::transparent);
+    {
+        QPainter gp(&_pixmap);
+        gp.setRenderHint(QPainter::Antialiasing, true);
+        gp.setBrush( QColor(20, 22, 28) );
+        gp.setPen( QPen(QColor(200, 176, 122), 3) );
+        gp.drawRoundedRect( QRectF(1, 1, w - 2, h - 2), 16, 16 );
+        gp.setBrush( QColor(232, 217, 168) );
+        gp.setPen(Qt::NoPen);
+        gp.drawRoundedRect( QRectF(48, 54, 18, 80), 4, 4 );
+        gp.drawRoundedRect( QRectF(17, 85, 80, 18), 4, 4 );
+        gp.setPen( QColor(232, 217, 168) );
+        QFont title = gp.font();
+        title.setPointSize(18);
+        title.setBold(true);
+        gp.setFont(title);
+        gp.drawText( QPoint(120, 88), QString::fromUtf8(NATRON_APPLICATION_NAME) );
     }
+
     resize( _pixmap.width(), _pixmap.height() );
     show();
 
@@ -172,13 +222,13 @@ LoadProjectSplashScreen::paintEvent(QPaintEvent* /*e*/)
 
     p.drawPixmap(0, 0, _pixmap);
     p.setPen(Qt::white);
-    p.drawText(QPointF(250 * _scale, _pixmap.height() - 51 * _scale), _text);
+    p.drawText(QPointF(120 * _scale, _pixmap.height() - 28 * _scale), _text);
 
     QString loadString( tr("Loading ") );
     QFontMetrics fm = p.fontMetrics();
-    QPointF loadStrPos(300 * _scale, _pixmap.height() / 2.);
-    p.drawText(QPointF(loadStrPos.x() + (fm.horizontalAdvance(loadString) + 5) * _scale, _pixmap.height() / 2.), _projectName);
-    p.setPen( QColor(243, 137, 0) );
+    QPointF loadStrPos(120 * _scale, _pixmap.height() / 2. + 18 * _scale);
+    p.drawText(QPointF(loadStrPos.x() + (fm.horizontalAdvance(loadString) + 5) * _scale, loadStrPos.y()), _projectName);
+    p.setPen( QColor(200, 176, 122) );
     p.drawText(loadStrPos, loadString);
 }
 

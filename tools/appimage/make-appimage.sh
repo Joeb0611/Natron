@@ -31,7 +31,7 @@ cp Resources/pixmaps/* usr/share/icons/hicolor/256x256/apps
 # create desktop entry
 cat > usr/share/applications/natron.desktop <<\EOF
 [Desktop Entry]
-Name=Natron
+Name=Natron+
 Type=Application
 Exec=Natron
 Icon=natronIcon256_linux
