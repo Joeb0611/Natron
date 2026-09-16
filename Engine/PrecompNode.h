@@ -28,7 +28,11 @@
 
 #include "Global/Macros.h"
 
+#ifndef Q_MOC_RUN
 #include "Engine/OutputEffectInstance.h"
+#else
+NATRON_MOC_STUB_QOBJECT(OutputEffectInstance)
+#endif
 #include "Engine/EngineFwd.h"
 
 NATRON_NAMESPACE_ENTER

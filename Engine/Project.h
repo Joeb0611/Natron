@@ -44,7 +44,11 @@ CLANG_DIAG_ON(uninitialized)
 #include "Engine/Knob.h"
 #include "Engine/Format.h"
 #include "Engine/TimeLine.h"
+#ifndef Q_MOC_RUN
 #include "Engine/NodeGroup.h"
+#else
+NATRON_MOC_STUB_QOBJECT(NodeGroup)
+#endif
 #include "Engine/ViewIdx.h"
 #include "Engine/EngineFwd.h"
 

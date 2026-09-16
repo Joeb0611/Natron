@@ -28,7 +28,11 @@
 
 #include "Global/Macros.h"
 
+#ifndef Q_MOC_RUN
 #include "Engine/NodeGroup.h"
+#else
+NATRON_MOC_STUB_QOBJECT(NodeGroup)
+#endif
 
 
 NATRON_NAMESPACE_ENTER

@@ -60,7 +60,12 @@ GCC_DIAG_ON(maybe-uninitialized)
 #include "Engine/NodeSerialization.h"
 #include "Engine/RectD.h"
 #include "Engine/EngineFwd.h"
+#ifndef Q_MOC_RUN
 #include "Engine/TrackMarker.h"
+#else
+NATRON_MOC_STUB_QOBJECT(TrackMarker)
+NATRON_MOC_STUB_QOBJECT(TrackMarkerPM)
+#endif
 #include "Engine/TrackerFrameAccessor.h"
 
 
