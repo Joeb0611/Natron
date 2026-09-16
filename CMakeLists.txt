@@ -1,7 +1,11 @@
 # ***** BEGIN LICENSE BLOCK *****
-# This file is part of Natron <https://natrongithub.github.io/>,
+# This file is part of Natron+ <https://github.com/Joeb0611/Natron>,
+# a fork of Natron <https://natrongithub.github.io/>.
+# (C) 2026 Natron+ contributors
 # (C) 2018-2023 The Natron developers
 # (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+#
+# Modified 2026-09-16: Natron+ homepage and description.
 #
 # Natron is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,8 +25,8 @@ cmake_minimum_required(VERSION 3.16.7)
 
 project(Natron
     VERSION "2.6.0"
-    DESCRIPTION "Open Source Compositing Software"
-    HOMEPAGE_URL "https://natrongithub.github.io/"
+    DESCRIPTION "Natron+ — independent fork of Natron, focused on production stability"
+    HOMEPAGE_URL "https://github.com/Joeb0611/Natron"
     LANGUAGES CXX C
 )
 
