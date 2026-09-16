@@ -368,6 +368,7 @@ Settings::makeHTMLDocumentation(bool genHTML) const
         if ( (*it)->getDefaultIsSecret() ) {
             continue;
         }
+        //QString knobScriptName = QString::fromUtf8( (*it)->getName().c_str() );
         QString knobLabel = convertFromPlainTextToMarkdown( QString::fromStdString( (*it)->getLabel() ), genHTML, false );
         QString knobHint = convertFromPlainTextToMarkdown( QString::fromStdString( (*it)->getHintToolTip() ), genHTML, false );
         KnobPage* isPage = dynamic_cast<KnobPage*>( it->get() );
@@ -544,3 +545,649 @@ Settings::makeHTMLDocumentation(bool genHTML) const
 
     return ret;
 } // Settings::makeHTMLDocumentation
+
+void
+Settings::populateSystemFonts(const QSettings& settings,
+                              const std::vector<std::string>& fonts)
+{
+    std::vector<ChoiceOption> options(fonts.size());
+    for (std::size_t i = 0; i < fonts.size(); ++i) {
+        options[i].id = fonts[i];
+    }
+    _systemFontChoice->populateChoices(options);
+    _scriptEditorFontChoice->populateChoices(options);
+
+    for (U32 i = 0; i < fonts.size(); ++i) {
+        if (fonts[i] == NATRON_FONT) {
+            _systemFontChoice->setDefaultValue(i);
+        }
+        if (fonts[i] == NATRON_SCRIPT_FONT) {
+            _scriptEditorFontChoice->setDefaultValue(i);
+        }
+    }
+    ///Now restore properly the system font choice
+    {
+        QString name = QString::fromUtf8( _systemFontChoice->getName().c_str() );
+        if ( settings.contains(name) ) {
+            std::string value = settings.value(name).toString().toStdString();
+            for (U32 i = 0; i < fonts.size(); ++i) {
+                if (fonts[i] == value) {
+                    _systemFontChoice->setValue(i);
+                    break;
+                }
+            }
+        }
+    }
+    {
+        QString name = QString::fromUtf8( _scriptEditorFontChoice->getName().c_str() );
+        if ( settings.contains(name) ) {
+            std::string value = settings.value(name).toString().toStdString();
+            for (U32 i = 0; i < fonts.size(); ++i) {
+                if (fonts[i] == value) {
+                    _scriptEditorFontChoice->setValue(i);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void
+Settings::getOpenFXPluginsSearchPaths(std::list<std::string>* paths) const
+{
+    assert(paths);
+    try {
+        _extraPluginPaths->getPaths(paths);
+    } catch (std::logic_error&) {
+        paths->clear();
+    }
+}
+
+bool
+Settings::getUseStdOFXPluginsLocation() const
+{
+    return _useStdOFXPluginsLocation->getValue();
+}
+
+void
+Settings::restoreDefault()
+{
+    QSettings settings( QString::fromUtf8(NATRON_ORGANIZATION_NAME), QString::fromUtf8(NATRON_APPLICATION_NAME) );
+
+    if ( !QFile::remove( settings.fileName() ) ) {
+        qDebug() << "Failed to remove settings ( " << settings.fileName() << " ).";
+    }
+
+    beginChanges();
+    const KnobsVec & knobs = getKnobs();
+    for (U32 i = 0; i < knobs.size(); ++i) {
+        for (int j = 0; j < knobs[i]->getDimension(); ++j) {
+            knobs[i]->resetToDefaultValue(j);
+        }
+    }
+    setCachingLabels();
+    endChanges();
+}
+
+bool
+Settings::isRenderInSeparatedProcessEnabled() const
+{
+    return _renderInSeparateProcess->getValue();
+}
+
+int
+Settings::getMaximumUndoRedoNodeGraph() const
+{
+    return _maxUndoRedoNodeGraph->getValue();
+}
+
+int
+Settings::getAutoSaveDelayMS() const
+{
+    return _autoSaveDelay->getValue() * 1000;
+}
+
+bool
+Settings::isAutoSaveEnabledForUnsavedProjects() const
+{
+    return _autoSaveUnSavedProjects->getValue();
+}
+
+int
+Settings::saveVersions() const
+{
+    return _saveVersions->getValue();
+}
+
+
+bool
+Settings::isSnapToNodeEnabled() const
+{
+    return _snapNodesToConnections->getValue();
+}
+
+bool
+Settings::isCheckForUpdatesEnabled() const
+{
+    return _checkForUpdates->getValue();
+}
+
+void
+Settings::setCheckUpdatesEnabled(bool enabled)
+{
+    _checkForUpdates->setValue(enabled);
+    saveSetting( _checkForUpdates.get() );
+}
+
+#ifdef NATRON_USE_BREAKPAD
+bool
+Settings::isCrashReportingEnabled() const
+{
+    return _enableCrashReports->getValue();
+}
+#endif
+
+int
+Settings::getMaxPanelsOpened() const
+{
+    return _maxPanelsOpened->getValue();
+}
+
+void
+Settings::setMaxPanelsOpened(int maxPanels)
+{
+    _maxPanelsOpened->setValue(maxPanels);
+    saveSetting( _maxPanelsOpened.get() );
+}
+
+bool
+Settings::loadBundledPlugins() const
+{
+    return _loadBundledPlugins->getValue();
+}
+
+bool
+Settings::preferBundledPlugins() const
+{
+    return _preferBundledPlugins->getValue();
+}
+
+void
+Settings::getDefaultNodeColor(float *r,
+                              float *g,
+                              float *b) const
+{
+    *r = _defaultNodeColor->getValue(0);
+    *g = _defaultNodeColor->getValue(1);
+    *b = _defaultNodeColor->getValue(2);
+}
+
+void
+Settings::getDefaultBackdropColor(float *r,
+                                  float *g,
+                                  float *b) const
+{
+    *r = _defaultBackdropColor->getValue(0);
+    *g = _defaultBackdropColor->getValue(1);
+    *b = _defaultBackdropColor->getValue(2);
+}
+
+void
+Settings::getGeneratorColor(float *r,
+                            float *g,
+                            float *b) const
+{
+    *r = _defaultGeneratorColor->getValue(0);
+    *g = _defaultGeneratorColor->getValue(1);
+    *b = _defaultGeneratorColor->getValue(2);
+}
+
+void
+Settings::getReaderColor(float *r,
+                         float *g,
+                         float *b) const
+{
+    *r = _defaultReaderColor->getValue(0);
+    *g = _defaultReaderColor->getValue(1);
+    *b = _defaultReaderColor->getValue(2);
+}
+
+void
+Settings::getWriterColor(float *r,
+                         float *g,
+                         float *b) const
+{
+    *r = _defaultWriterColor->getValue(0);
+    *g = _defaultWriterColor->getValue(1);
+    *b = _defaultWriterColor->getValue(2);
+}
+
+void
+Settings::getColorGroupColor(float *r,
+                             float *g,
+                             float *b) const
+{
+    *r = _defaultColorGroupColor->getValue(0);
+    *g = _defaultColorGroupColor->getValue(1);
+    *b = _defaultColorGroupColor->getValue(2);
+}
+
+void
+Settings::getFilterGroupColor(float *r,
+                              float *g,
+                              float *b) const
+{
+    *r = _defaultFilterGroupColor->getValue(0);
+    *g = _defaultFilterGroupColor->getValue(1);
+    *b = _defaultFilterGroupColor->getValue(2);
+}
+
+void
+Settings::getTransformGroupColor(float *r,
+                                 float *g,
+                                 float *b) const
+{
+    *r = _defaultTransformGroupColor->getValue(0);
+    *g = _defaultTransformGroupColor->getValue(1);
+    *b = _defaultTransformGroupColor->getValue(2);
+}
+
+void
+Settings::getTimeGroupColor(float *r,
+                            float *g,
+                            float *b) const
+{
+    *r = _defaultTimeGroupColor->getValue(0);
+    *g = _defaultTimeGroupColor->getValue(1);
+    *b = _defaultTimeGroupColor->getValue(2);
+}
+
+void
+Settings::getDrawGroupColor(float *r,
+                            float *g,
+                            float *b) const
+{
+    *r = _defaultDrawGroupColor->getValue(0);
+    *g = _defaultDrawGroupColor->getValue(1);
+    *b = _defaultDrawGroupColor->getValue(2);
+}
+
+void
+Settings::getKeyerGroupColor(float *r,
+                             float *g,
+                             float *b) const
+{
+    *r = _defaultKeyerGroupColor->getValue(0);
+    *g = _defaultKeyerGroupColor->getValue(1);
+    *b = _defaultKeyerGroupColor->getValue(2);
+}
+
+void
+Settings::getChannelGroupColor(float *r,
+                               float *g,
+                               float *b) const
+{
+    *r = _defaultChannelGroupColor->getValue(0);
+    *g = _defaultChannelGroupColor->getValue(1);
+    *b = _defaultChannelGroupColor->getValue(2);
+}
+
+void
+Settings::getMergeGroupColor(float *r,
+                             float *g,
+                             float *b) const
+{
+    *r = _defaultMergeGroupColor->getValue(0);
+    *g = _defaultMergeGroupColor->getValue(1);
+    *b = _defaultMergeGroupColor->getValue(2);
+}
+
+void
+Settings::getViewsGroupColor(float *r,
+                             float *g,
+                             float *b) const
+{
+    *r = _defaultViewsGroupColor->getValue(0);
+    *g = _defaultViewsGroupColor->getValue(1);
+    *b = _defaultViewsGroupColor->getValue(2);
+}
+
+void
+Settings::getDeepGroupColor(float *r,
+                            float *g,
+                            float *b) const
+{
+    *r = _defaultDeepGroupColor->getValue(0);
+    *g = _defaultDeepGroupColor->getValue(1);
+    *b = _defaultDeepGroupColor->getValue(2);
+}
+
+int
+Settings::getDisconnectedArrowLength() const
+{
+    return _disconnectedArrowLength->getValue();
+}
+
+std::string
+Settings::getHostName() const
+{
+    int entry_i =  _hostName->getValue();
+    std::vector<ChoiceOption> entries = _hostName->getEntries_mt_safe();
+
+    if ( (entry_i >= 0) && ( entry_i < (int)entries.size() ) && (entries[entry_i].id == NATRON_CUSTOM_HOST_NAME_ENTRY) ) {
+        return _customHostName->getValue();
+    } else {
+        if ( (entry_i >= 0) && ( entry_i < (int)_knownHostNames.size() ) ) {
+            return _knownHostNames[entry_i].id;
+        }
+
+        return std::string();
+    }
+}
+
+bool
+Settings::getRenderOnEditingFinishedOnly() const
+{
+    return _renderOnEditingFinished->getValue();
+}
+
+void
+Settings::setRenderOnEditingFinishedOnly(bool render)
+{
+    _renderOnEditingFinished->setValue(render);
+}
+
+bool
+Settings::getIconsBlackAndWhite() const
+{
+    return _useBWIcons->getValue();
+}
+
+std::string
+Settings::getDefaultLayoutFile() const
+{
+    return _defaultLayoutFile->getValue();
+}
+
+bool
+Settings::getLoadProjectWorkspce() const
+{
+    return _loadProjectsWorkspace->getValue();
+}
+
+#ifdef Q_OS_WIN
+bool
+Settings::getEnableConsoleWindow() const
+{
+    return _enableConsoleWindow->getValue();
+}
+#endif
+
+bool
+Settings::useCursorPositionIncrements() const
+{
+    return _useCursorPositionIncrements->getValue();
+}
+
+bool
+Settings::isAutoProjectFormatEnabled() const
+{
+    return _firstReadSetProjectFormat->getValue();
+}
+
+bool
+Settings::isAutoFixRelativeFilePathEnabled() const
+{
+    return _fixPathsOnProjectPathChanged->getValue();
+}
+
+int
+Settings::getNumberOfParallelRenders() const
+{
+#ifndef NATRON_PLAYBACK_USES_THREAD_POOL
+
+    return _numberOfParallelRenders->getValue();
+#else
+
+    return 1;
+#endif
+}
+
+void
+Settings::setNumberOfParallelRenders(int nb)
+{
+#ifndef NATRON_PLAYBACK_USES_THREAD_POOL
+    _numberOfParallelRenders->setValue(nb);
+#endif
+}
+
+bool
+Settings::areRGBPixelComponentsSupported() const
+{
+    return _activateRGBSupport->getValue();
+}
+
+bool
+Settings::isTransformConcatenationEnabled() const
+{
+    return _activateTransformConcatenationSupport->getValue();
+}
+
+bool
+Settings::useGlobalThreadPool() const
+{
+    return _useThreadPool->getValue();
+}
+
+void
+Settings::setUseGlobalThreadPool(bool use)
+{
+    _useThreadPool->setValue(use);
+}
+
+bool
+Settings::useInputAForMergeAutoConnect() const
+{
+    return _useInputAForMergeAutoConnect->getValue();
+}
+
+void
+Settings::doOCIOStartupCheckIfNeeded()
+{
+    bool docheck = _ocioStartupCheck->getValue();
+    AppInstancePtr mainInstance = appPTR->getTopLevelInstance();
+
+    if (!mainInstance) {
+        qDebug() << "WARNING: doOCIOStartupCheckIfNeeded() called without a AppInstance";
+
+        return;
+    }
+
+    if (docheck && mainInstance) {
+        int entry_i = _ocioConfigKnob->getValue();
+        std::vector<ChoiceOption> entries = _ocioConfigKnob->getEntries_mt_safe();
+        std::string warnText;
+        if ( (entry_i < 0) || ( entry_i >= (int)entries.size() ) ) {
+            warnText = tr("The current OCIO config selected in the preferences is invalid, would you like to set it to the default config (%1)?").arg( QString::fromUtf8(NATRON_DEFAULT_OCIO_CONFIG_NAME) ).toStdString();
+        } else if (entries[entry_i].id != NATRON_DEFAULT_OCIO_CONFIG_NAME) {
+            warnText = tr("The current OCIO config selected in the preferences is not the default one (%1), would you like to set it to the default config?").arg( QString::fromUtf8(NATRON_DEFAULT_OCIO_CONFIG_NAME) ).toStdString();
+        } else {
+            return;
+        }
+
+        bool stopAsking = false;
+        StandardButtonEnum reply = mainInstance->questionDialog("OCIO config", warnText, false,
+                                                                StandardButtons(eStandardButtonYes | eStandardButtonNo),
+                                                                eStandardButtonYes,
+                                                                &stopAsking);
+        if (stopAsking != !docheck) {
+            _ocioStartupCheck->setValue(!stopAsking);
+            saveSetting( _ocioStartupCheck.get() );
+        }
+
+        if (reply == eStandardButtonYes) {
+            int defaultIndex = -1;
+            for (unsigned i = 0; i < entries.size(); ++i) {
+                if (entries[i].id.find(NATRON_DEFAULT_OCIO_CONFIG_NAME) != std::string::npos) {
+                    defaultIndex = i;
+                    break;
+                }
+            }
+            if (defaultIndex != -1) {
+                _ocioConfigKnob->setValue(defaultIndex);
+                saveSetting( _ocioConfigKnob.get() );
+            } else {
+                Dialogs::warningDialog( "OCIO config", tr("The %2 OCIO config could not be found.\n"
+                                                          "This is probably because you're not using the OpenColorIO-Configs folder that should "
+                                                          "be bundled with your %1 installation.").arg( QString::fromUtf8(NATRON_APPLICATION_NAME) ).arg( QString::fromUtf8(NATRON_DEFAULT_OCIO_CONFIG_NAME) ).toStdString() );
+            }
+        }
+    }
+} // Settings::doOCIOStartupCheckIfNeeded
+
+bool
+Settings::didSettingsExistOnStartup() const
+{
+    return _settingsExisted;
+}
+
+bool
+Settings::notifyOnFileChange() const
+{
+    return _notifyOnFileChange->getValue();
+}
+
+bool
+Settings::isAutoTurboEnabled() const
+{
+    return _autoTurbo->getValue();
+}
+
+void
+Settings::setAutoTurboModeEnabled(bool e)
+{
+    _autoTurbo->setValue(e);
+}
+
+void
+Settings::setOptionalInputsAutoHidden(bool hidden)
+{
+    _hideOptionalInputsAutomatically->setValue(hidden);
+}
+
+bool
+Settings::areOptionalInputsAutoHidden() const
+{
+    return _hideOptionalInputsAutomatically->getValue();
+}
+
+void
+Settings::getPythonGroupsSearchPaths(std::list<std::string>* templates) const
+{
+    _templatesPluginPaths->getPaths(templates);
+}
+
+void
+Settings::appendPythonGroupsPath(const std::string& path)
+{
+    _templatesPluginPaths->appendPath(path);
+    QSettings settings( QString::fromUtf8(NATRON_ORGANIZATION_NAME), QString::fromUtf8(NATRON_APPLICATION_NAME) );
+    settings.setValue( QString::fromUtf8( _templatesPluginPaths->getName().c_str() ), QVariant( QString::fromUtf8( _templatesPluginPaths->getValue(0).c_str() ) ) );
+}
+
+std::string
+Settings::getDefaultOnProjectLoadedCB()
+{
+    return _defaultOnProjectLoaded->getValue();
+}
+
+std::string
+Settings::getDefaultOnProjectSaveCB()
+{
+    return _defaultOnProjectSave->getValue();
+}
+
+std::string
+Settings::getDefaultOnProjectCloseCB()
+{
+    return _defaultOnProjectClose->getValue();
+}
+
+std::string
+Settings::getDefaultOnNodeCreatedCB()
+{
+    return _defaultOnNodeCreated->getValue();
+}
+
+std::string
+Settings::getDefaultOnNodeDeleteCB()
+{
+    return _defaultOnNodeDelete->getValue();
+}
+
+std::string
+Settings::getOnProjectCreatedCB()
+{
+    return _onProjectCreated->getValue();
+}
+
+bool
+Settings::isLoadFromPyPlugsEnabled() const
+{
+    return _loadPyPlugsFromPythonScript->getValue();
+}
+
+bool
+Settings::isAutoDeclaredVariablePrintActivated() const
+{
+    return _echoVariableDeclarationToPython->getValue();
+}
+
+void
+Settings::setAutoDeclaredVariablePrintEnabled(bool enabled)
+{
+    _echoVariableDeclarationToPython->setValue(enabled);
+    saveSetting( _echoVariableDeclarationToPython.get() );
+}
+
+bool
+Settings::isPluginIconActivatedOnNodeGraph() const
+{
+    return _usePluginIconsInNodeGraph->getValue();
+}
+
+bool
+Settings::isNodeGraphAntiAliasingEnabled() const
+{
+    return _useAntiAliasing->getValue();
+}
+
+void
+Settings::getSunkenColor(double* r,
+                         double* g,
+                         double* b) const
+{
+    *r = _sunkenColor->getValue(0);
+    *g = _sunkenColor->getValue(1);
+    *b = _sunkenColor->getValue(2);
+}
+
+void
+Settings::getBaseColor(double* r,
+                       double* g,
+                       double* b) const
+{
+    *r = _baseColor->getValue(0);
+    *g = _baseColor->getValue(1);
+    *b = _baseColor->getValue(2);
+}
+
+void
+Settings::getRaisedColor(double* r,
+                         double* g,
+                         double* b) const
+{
+    *r = _raisedColor->getValue(0);
+    *g = _raisedColor->getValue(1);
+    *b = _raisedColor->getValue(2);
+}
