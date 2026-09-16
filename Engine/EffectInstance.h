@@ -126,69 +126,36 @@ GCC_DIAG_SUGGEST_OVERRIDE_OFF
     Q_OBJECT
 GCC_DIAG_SUGGEST_OVERRIDE_ON
 
-public:
-    typedef std::map<int, std::list<ImagePtr> > InputImagesMap;
-    typedef std::map<int, std::list<ImagePlaneDesc> > ComponentsNeededMap;
-    typedef std::shared_ptr<ComponentsNeededMap> ComponentsNeededMapPtr;
 
-    struct RenderRoIArgs
-    {
-        double time;
-        RenderScale scale;
-        unsigned int mipmapLevel;
-        ViewIdx view;
-        RectI roi;
-        RectD preComputedRoD;
-        std::list<ImagePlaneDesc> components;
-        EffectInstance::InputImagesMap inputImagesList;
-        const EffectInstance* caller;
-        ImageBitDepthEnum bitdepth;
-        bool byPassCache;
-        bool calledFromGetImage;
-        StorageModeEnum returnStorage;
-        bool allowGPURendering;
-        double callerRenderTime;
-        RenderRoIArgs();
-        RenderRoIArgs( double time_, const RenderScale & scale_, unsigned int mipmapLevel_, ViewIdx view_, bool byPassCache_, const RectI & roi_, const RectD & preComputedRoD_, const std::list<ImagePlaneDesc> & components_, ImageBitDepthEnum bitdepth_, bool calledFromGetImage, const EffectInstance* caller, StorageModeEnum returnStorage, double callerRenderTime, const EffectInstance::InputImagesMap & inputImages = EffectInstance::InputImagesMap() );
-    };
-
-    enum SupportsEnum { eSupportsMaybe = -1, eSupportsNo = 0, eSupportsYes = 1 };
-
-    explicit EffectInstance(NodePtr node);
-protected:
-    EffectInstance(const EffectInstance& other);
-public:
-    virtual ~EffectInstance();
-    void markImageAsBeingRenderedForTests(const ImagePtr & img, const RectI& roi);
-    bool waitForImageBeingRenderedElsewhereForTests(const RectI & roi, const ImagePtr & img);
-    void unmarkImageAsBeingRenderedForTests(const ImagePtr & img, bool renderFailed);
-    bool aborted() const WARN_UNUSED_RETURN;
-    NodePtr getNode() const WARN_UNUSED_RETURN { return _node.lock(); }
-    virtual int getNInputs() const WARN_UNUSED_RETURN = 0;
-    virtual bool isInputOptional(int inputNb) const WARN_UNUSED_RETURN = 0;
-    virtual std::string getPluginID() const WARN_UNUSED_RETURN = 0;
-    virtual std::string getPluginLabel() const WARN_UNUSED_RETURN = 0;
-    virtual void getPluginGrouping(std::list<std::string>* grouping) const = 0;
-    virtual std::string getPluginDescription() const WARN_UNUSED_RETURN = 0;
-    virtual int getMajorVersion() const WARN_UNUSED_RETURN = 0;
-    virtual int getMinorVersion() const WARN_UNUSED_RETURN = 0;
-    virtual RenderSafetyEnum renderThreadSafety() const WARN_UNUSED_RETURN = 0;
-    virtual void addAcceptedComponents(int inputNb, std::list<ImagePlaneDesc>* comps) = 0;
-    virtual void addSupportedBitDepth(std::list<ImageBitDepthEnum>* depths) const = 0;
-    NodeWPtr _node;
-private:
-    class Implementation;
-    std::unique_ptr<Implementation> _imp;
-};
+// Split into include parts so GitHub Contents/MCP writes stay under the 100k cap
+// (same pattern as Settings.cpp / OutputSchedulerThread.cpp).
+#include "EffectInstancePart1.inc"
+#include "EffectInstancePart2.inc"
+#include "EffectInstancePart3.inc"
 
 class ClipPreferencesRunning_RAII
 {
     EffectInstance* _effect;
+
 public:
-    ClipPreferencesRunning_RAII(EffectInstance* effect) : _effect(effect) { _effect->setClipPreferencesRunning(true); }
-    ~ClipPreferencesRunning_RAII() { _effect->setClipPreferencesRunning(false); }
+
+    ClipPreferencesRunning_RAII(EffectInstance* effect)
+        : _effect(effect)
+    {
+        _effect->setClipPreferencesRunning(true);
+    }
+
+    ~ClipPreferencesRunning_RAII()
+    {
+        _effect->setClipPreferencesRunning(false);
+    }
 };
 
+
+/**
+ * @typedef Any plug-in should have a static function called BuildEffect with the following signature.
+ * It is used to build a new instance of an effect. Basically it should just call the constructor.
+ **/
 typedef EffectInstance* (*EffectBuilder)(NodePtr);
 
 NATRON_NAMESPACE_EXIT
