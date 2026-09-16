@@ -1,7 +1,11 @@
 /* ***** BEGIN LICENSE BLOCK *****
- * This file is part of Natron <https://natrongithub.github.io/>,
+ * This file is part of Natron+ <https://github.com/Joeb0611/Natron>,
+ * a fork of Natron <https://natrongithub.github.io/>.
+ * (C) 2026 Natron+ contributors
  * (C) 2018-2023 The Natron developers
  * (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+ *
+ * Modified 2026-09-16: waitForImageBeingRenderedElsewhere aborts/stalls unwind.
  *
  * Natron is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +32,8 @@
 #include <cassert>
 #include <stdexcept>
 #include <sstream> // stringstream
+
+#include <QElapsedTimer>
 
 #include "Engine/AppInstance.h"
 #include "Engine/Node.h"
@@ -603,6 +609,8 @@ EffectInstance::Implementation::markImageAsBeingRendered(const ImagePtr & img, c
     }
 }
 
+#define NATRON_IMAGE_ELSEWHERE_WAIT_TIMEOUT_MS 15000
+
 bool
 EffectInstance::Implementation::waitForImageBeingRenderedElsewhere(const RectI & roi,
                                                                             const ImagePtr & img)
@@ -626,15 +634,25 @@ EffectInstance::Implementation::waitForImageBeingRenderedElsewhere(const RectI &
 
     bool ab = _publicInterface->aborted();
 
+    QElapsedTimer stallTimer;
+    stallTimer.start();
+
     QMutexLocker kk(&ibr->lock);
     while (!ab && isBeingRenderedElseWhere && !ibr->failed && ibr->refCount > 1) {
+        if (stallTimer.hasExpired(NATRON_IMAGE_ELSEWHERE_WAIT_TIMEOUT_MS)) {
+            // The other renderer never unmarked this tile (deadlock / crash). Unwind
+            // instead of sitting at CPU-zero. See NatronGitHub/Natron#248.
+            ibr->failed = true;
+            ibr->cond.wakeAll();
+            break;
+        }
         ibr->cond.wait(kk.mutex(), 50);
         restToRender.clear();
         isBeingRenderedElseWhere = false;
         img->getRestToRender_trimap(roi, restToRender, &isBeingRenderedElseWhere);
         ab = _publicInterface->aborted();
     }
-    ///Everything should be rendered now unless we are aborted
+    ///Everything should be rendered now unless we are aborted, failed, or stalled
     return restToRender.empty() && !ibr->failed && !ab;
 }
 
@@ -755,6 +773,57 @@ EffectInstance::Implementation::clearInputImagePointers()
     tls->currentRenderArgs.inputImages.clear();
 }
 
-NATRON_NAMESPACE_EXIT
+void
+EffectInstance::markImageAsBeingRenderedForTests(const ImagePtr & img,
+                                                 const RectI& roi)
+{
+#if NATRON_ENABLE_TRIMAP
+    if (!img) {
+        return;
+    }
+    std::list<RectI> rest;
+    bool elsewhere = false;
+    _imp->markImageAsBeingRendered(img, roi, &rest, &elsewhere);
+#else
+    Q_UNUSED(img);
+    Q_UNUSED(roi);
+#endif
+}
 
+bool
+EffectInstance::waitForImageBeingRenderedElsewhereForTests(const RectI & roi,
+                                                           const ImagePtr & img)
+{
+#if NATRON_ENABLE_TRIMAP
+    if (!img) {
+        return false;
+    }
+
+    return _imp->waitForImageBeingRenderedElsewhere(roi, img);
+#else
+    Q_UNUSED(roi);
+    Q_UNUSED(img);
+
+    return true;
+#endif
+}
+
+void
+EffectInstance::unmarkImageAsBeingRenderedForTests(const ImagePtr & img,
+                                                   bool renderFailed)
+{
+#if NATRON_ENABLE_TRIMAP
+    if (!img) {
+        return;
+    }
+    std::list<RectI> rects;
+    rects.push_back(img->getBounds());
+    _imp->unmarkImageAsBeingRendered(img, rects, renderFailed);
+#else
+    Q_UNUSED(img);
+    Q_UNUSED(renderFailed);
+#endif
+}
+
+NATRON_NAMESPACE_EXIT
 
