@@ -1,0 +1,35 @@
+name: Generate Natron+ icons
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - tools/generate-natronplus-icons.py
+      - Gui/Resources/Images/natronplusIcon.svg
+      - .github/workflows/generate-icons.yml
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Rasterize product icons
+        run: python3 tools/generate-natronplus-icons.py
+      - name: Commit generated bitmaps
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Gui/Resources/Images/natronplusIcon.xpm \
+                  Gui/Resources/Images/natronplusIcon256.png \
+                  Gui/Resources/Images/natronplusIcon256.ico \
+                  Gui/Resources/Images/natronIcon256_linux.png \
+                  Gui/Resources/Images/natronIcon256_windows.ico
+          if git diff --cached --quiet; then
+            echo "No icon changes"
+          else
+            git commit -m "chore: generate Natron+ product icons (not Natron lettermark)"
+            git push
+          fi

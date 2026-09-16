@@ -17,11 +17,11 @@
 	<key>CFBundleSignature</key>
 	<string>@TYPEINFO@</string>
 	<key>CFBundleName</key>
-	<string>@EXECUTABLE@</string>
+	<string>Natron+</string>
 	<key>CFBundleExecutable</key>
 	<string>@EXECUTABLE@</string>
 	<key>CFBundleIdentifier</key>
-	<string>fr.inria.@EXECUTABLE@</string>
+	<string>io.github.joeb0611.natronplus</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -34,7 +34,7 @@
 				<string>application/vnd.natron.project</string>
 			</array>
 			<key>CFBundleTypeName</key>
-			<string>Natron Project File</string>
+			<string>Natron+ Project File</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSIsAppleDefaultForType</key>
@@ -52,7 +52,7 @@
 				<string>application/vnd.natron.nodepresets</string>
 			</array>
 			<key>CFBundleTypeName</key>
-			<string>Natron Node Presets</string>
+			<string>Natron+ Node Presets</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleTypeIconFile</key>
@@ -68,7 +68,7 @@
 				<string>application/vnd.natron.layout</string>
 			</array>
 			<key>CFBundleTypeName</key>
-			<string>Natron Layout</string>
+			<string>Natron+ Layout</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleTypeIconFile</key>
