@@ -1,7 +1,11 @@
 # ***** BEGIN LICENSE BLOCK *****
-# This file is part of Natron <https://natrongithub.github.io/>,
+# This file is part of Natron+ <https://github.com/Joeb0611/Natron>,
+# a fork of Natron <https://natrongithub.github.io/>.
+# (C) 2026 Natron+ contributors
 # (C) 2018-2023 The Natron developers
 # (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+#
+# Modified 2026-09-16: include Engine *.inc in headers for shiboken/AUTOMOC deps.
 #
 # Natron is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +26,8 @@ include(FindPkgConfig)
 pkg_check_modules(Cairo REQUIRED IMPORTED_TARGET cairo fontconfig)
 
 file(GLOB NatronEngine_HEADERS *.h)
+file(GLOB NatronEngine_INCS *.inc)
+list(APPEND NatronEngine_HEADERS ${NatronEngine_INCS})
 file(GLOB NatronEngine_SOURCES *.cpp)
 
 set(PYENGINE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Qt${QT_VERSION_MAJOR})

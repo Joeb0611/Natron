@@ -1,44 +1,19 @@
-# Owned Natron+ CI. Manual dispatch only (no push trigger).
-# Linux stays skipped until repository variable NATRONPLUS_CI_ENABLED=true
-# (Ubuntu still needs extra packages). Windows CMake runs on dispatch.
-# Do not set NATRONPLUS_CI_ENABLED until the Linux job is ready.
-name: CMake build
+# Natron+ Windows CMake configure + build.
+# Manual dispatch only. Does not set or require NATRONPLUS_CI_ENABLED.
+# Inherited installer / pacman / Tests jobs stay dispatch-only / skipped.
+name: Windows CMake
 
 on:
   workflow_dispatch:
 
-jobs:
-  linux-cmake:
-    name: Linux CMake configure + build
-    if: ${{ vars.NATRONPLUS_CI_ENABLED == 'true' }}
-    runs-on: ubuntu-latest
-    env:
-      CI: 'True'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4.1.1
-        with:
-          submodules: recursive
-      - name: Install system packages
-        run: |
-          sudo apt update
-          sudo apt install -y build-essential cmake ninja-build \
-            libboost-serialization-dev libboost-system-dev libexpat1-dev libcairo2-dev \
-            qt5-qmake qtbase5-dev qtdeclarative5-dev \
-            python3-dev libshiboken2-dev libpyside2-dev python3-pyside2.qtwidgets python3-qtpy \
-            libwayland-dev libwayland-client0 libwayland-egl1 \
-            extra-cmake-modules
-      - name: CMake configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DNATRON_BUILD_TESTS=OFF
-      - name: CMake build
-        run: cmake --build build --parallel 2
+permissions:
+  contents: read
 
+jobs:
   windows-cmake:
     name: Windows CMake configure + build
-    # Dispatch-only (this file has no push trigger). Not gated on
-    # NATRONPLUS_CI_ENABLED so a manual Windows run can proceed without
-    # turning on the Linux job, which still needs extra Ubuntu packages.
     runs-on: windows-latest
+    timeout-minutes: 240
     defaults:
       run:
         shell: msys2 {0}

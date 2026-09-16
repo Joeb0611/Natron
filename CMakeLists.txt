@@ -5,7 +5,7 @@
 # (C) 2018-2023 The Natron developers
 # (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
 #
-# Modified 2026-09-16: Natron+ homepage and description.
+# Modified 2026-09-16: Natron+ homepage and description; windres include path.
 #
 # Natron is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -194,8 +194,9 @@ elseif(WIN32)
         endif()
         add_link_options(-mwindows -municode)
         set(CMAKE_RC_COMPILER_INIT windres)
+        # windres does not inherit C++ include dirs; Natron.rc needs Global/Macros.h.
         set(CMAKE_RC_COMPILE_OBJECT
-            "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
+            "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -I${CMAKE_SOURCE_DIR} -i <SOURCE> -o <OBJECT>")
     endif()
 endif()
 
