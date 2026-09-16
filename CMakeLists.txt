@@ -195,6 +195,15 @@ if(IS_DEBUG_BUILD AND WIN32)
     set_property(TARGET ${SHIBOKEN_LIB} PROPERTY INTERFACE_COMPILE_DEFINITIONS SHIBOKEN_DEFS)
 endif()
 
+# Homebrew macOS PySide2 is built with FORCE_LIMITED_API. That define leaks
+# through Shiboken2::libshiboken into Natron TUs that need PyRun_String.
+if(APPLE AND TARGET "${SHIBOKEN_LIB}")
+    get_property(_NATRON_SK_DEFS TARGET ${SHIBOKEN_LIB} PROPERTY INTERFACE_COMPILE_DEFINITIONS)
+    list(FILTER _NATRON_SK_DEFS EXCLUDE REGEX "^Py_LIMITED_API")
+    set_property(TARGET ${SHIBOKEN_LIB} PROPERTY INTERFACE_COMPILE_DEFINITIONS ${_NATRON_SK_DEFS})
+    message(STATUS "macOS: dropped Py_LIMITED_API from ${SHIBOKEN_LIB} interface defines")
+endif()
+
 #Since in Natron and OpenFX all strings are supposed UTF-8 and that the constructor
 #for QString(const char*) assumes ASCII strings, we may run into troubles
 add_compile_definitions(QT_NO_CAST_FROM_ASCII)
