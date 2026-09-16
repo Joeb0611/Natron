@@ -1,37 +1,11 @@
+# One-shot canceler used 2026-09-16. Kept dispatch-only so it cannot fail-mail.
 name: Cancel inherited runs
-
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/cancel-inherited-runs.yml'
-
-permissions:
-  actions: write
-  contents: read
-
+  workflow_dispatch:
 jobs:
-  cancel:
-    name: Cancel queued and in-progress runs
-    runs-on: macos-latest
-    timeout-minutes: 10
+  disabled:
+    name: Neutralized
+    if: false
+    runs-on: ubuntu-latest
     steps:
-      - name: Cancel other workflow runs
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set +e
-          KNOWN_IDS="35046844437 35046537033 35046537000 35046536999 35046536998 35046515952 35046515740 35046515691 35046443029 35046443027"
-          for id in $KNOWN_IDS; do
-            echo "cancel known $id"
-            gh api -X POST "repos/${GITHUB_REPOSITORY}/actions/runs/${id}/cancel" >/dev/null
-          done
-          for status in queued in_progress waiting; do
-            gh api "repos/${GITHUB_REPOSITORY}/actions/runs?status=${status}&per_page=100" --jq '.workflow_runs[].id' | while read -r id; do
-              if [ -n "$id" ] && [ "$id" != "${GITHUB_RUN_ID}" ]; then
-                echo "cancel ${status} $id"
-                gh api -X POST "repos/${GITHUB_REPOSITORY}/actions/runs/${id}/cancel" >/dev/null
-              fi
-            done
-          done
-          exit 0
+      - run: echo neutralized
