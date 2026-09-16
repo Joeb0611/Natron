@@ -1,7 +1,11 @@
 /* ***** BEGIN LICENSE BLOCK *****
- * This file is part of Natron <https://natrongithub.github.io/>,
+ * This file is part of Natron+ <https://github.com/Joeb0611/Natron>,
+ * a fork of Natron <https://natrongithub.github.io/>.
+ * Copyright (C) 2026 Natron+ contributors
  * Copyright (C) 2018-2023 The Natron developers
  * Copyright (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+ *
+ * Modified 2026-09-16: crash-reporter product string for Natron+.
  *
  * Natron is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +25,10 @@
 
 #include "Global/Macros.h"
 
-#include <assert>
+#include <cassert>
 #include <iostream>
 #include <sstream>
-#include <cstring>
+#include <string>
 #include <cstring>
 #include <exception>
 #include <stdexcept>
@@ -997,7 +1001,7 @@ void
 CallbacksManager::processCrashReport()
 {
 #ifdef REPORTER_CLI_ONLY
-    uploadFileToRepository( _dumpFilePath, QString::fromUtf8("Crash auto-uploaded from NatronRenderer"), QString::fromUtf8(""), QString::fromUtf8(""), QString::fromUtf8(""), QString::fromUtf8(""), QString::fromUtf8(""), QString::fromUtf8(""), QString::fromUtf8(""), QString::fromUtf8("") );
+    uploadFileToRepository( _dumpFilePath, QString::fromUtf8("Crash auto-uploaded from ") + QString::fromUtf8(NATRON_APPLICATION_NAME) + QString::fromUtf8("Renderer"), QString::fromUtf8(""), QString::fromUtf8(""), QString::fromUtf8(""), QString::fromUtf8(""), QString::fromUtf8(""), QString::fromUtf8(""), QString::fromUtf8(""), QString::fromUtf8("") );
 
     ///@todo We must notify the user the log is available at filePath but we don't have access to the terminal with this process
 #else
