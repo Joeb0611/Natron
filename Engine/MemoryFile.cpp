@@ -458,3 +458,4 @@ MemoryFile::remove()
 }
 
 NATRON_NAMESPACE_EXIT
+
