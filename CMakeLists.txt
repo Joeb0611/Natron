@@ -18,7 +18,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Natron.  If not, see <http://www.gnu.org/licenses/gpl-2.0.html>
+# along with Natron.  If not, see <https://www.gnu.org/licenses/gpl-2.0.html>
 # ***** END LICENSE BLOCK *****
 
 cmake_minimum_required(VERSION 3.16.7)
@@ -39,6 +39,8 @@ option(NATRON_SYSTEM_LIBS "use system versions of dependencies instead of bundle
 option(NATRON_BUILD_TESTS "build the Natron test suite" ON)
 option(NATRON_ASAN "build with AddressSanitizer (Linux/macOS)" OFF)
 option(NATRON_TSAN "build with ThreadSanitizer (Linux/macOS)" OFF)
+set(NATRON_WINE_TOOLS_DIR "" CACHE PATH
+    "Unix wrappers for mingw64 moc/rcc/shiboken2 when cross-compiling from Linux")
 
 set(IS_DEBUG_BUILD OFF)
 if(CMAKE_BUILD_TYPE MATCHES "^(debug|Debug|DEBUG)$")
@@ -145,6 +147,27 @@ else()
     set(SHIBOKEN_EXE Shiboken2::shiboken2)
     set(SHIBOKEN_LIB Shiboken2::libshiboken)
     set(PYSIDE_LIB PySide2::pyside2)
+endif()
+
+# When cross-compiling from Linux, Qt/Shiboken IMPORTED tools are .exe files.
+# Point them at Unix wrappers so AUTOMOC / shiboken custom commands can run.
+if(NATRON_WINE_TOOLS_DIR)
+    foreach(_np_tool IN ITEMS moc rcc qmake)
+        if(TARGET Qt5::${_np_tool} AND EXISTS "${NATRON_WINE_TOOLS_DIR}/${_np_tool}")
+            set_target_properties(Qt5::${_np_tool} PROPERTIES
+                IMPORTED_LOCATION "${NATRON_WINE_TOOLS_DIR}/${_np_tool}")
+        endif()
+    endforeach()
+    if(TARGET Shiboken2::shiboken2 AND EXISTS "${NATRON_WINE_TOOLS_DIR}/shiboken2")
+        set_target_properties(Shiboken2::shiboken2 PROPERTIES
+            IMPORTED_LOCATION "${NATRON_WINE_TOOLS_DIR}/shiboken2")
+    endif()
+    if(TARGET Qt5::moc)
+        get_target_property(QT_MOC_EXECUTABLE Qt5::moc LOCATION)
+        set(Qt5Core_MOC_EXECUTABLE Qt5::moc)
+        set(Qt5Core_RCC_EXECUTABLE Qt5::rcc)
+    endif()
+    unset(_np_tool)
 endif()
 
 if(IS_DEBUG_BUILD AND WIN32)
