@@ -1,7 +1,11 @@
 /* ***** BEGIN LICENSE BLOCK *****
- * This file is part of Natron <https://natrongithub.github.io/>,
+ * This file is part of Natron+ <https://github.com/Joeb0611/Natron>,
+ * a fork of Natron <https://natrongithub.github.io/>.
+ * (C) 2026 Natron+ contributors
  * (C) 2018-2023 The Natron developers
  * (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+ *
+ * Modified 2026-09-16: blocking headless render cannot hang at CPU-zero (#248).
  *
  * Natron is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +42,10 @@ CLANG_DIAG_ON(deprecated-register)
 #include "Engine/AppManager.h"
 #include "Engine/EffectInstance.h"
 #include "Engine/OutputEffectInstance.h"
+#include "Engine/OutputSchedulerThread.h"
 #include "Engine/Settings.h"
+
+#include <QElapsedTimer>
 
 NATRON_NAMESPACE_ENTER
 
@@ -65,8 +72,19 @@ BlockingBackgroundRender::blockingRender(bool enableRenderStats,
     if (appPTR->getCurrentSettings()->getNumberOfThreads() == -1) {
         _running = false;
     } else {
+        QElapsedTimer stallTimer;
+        stallTimer.start();
+        const qint64 kMaxWaitMs = 30000;
         while (_running) {
-            _runningCond.wait(locker.mutex());
+            if (!_runningCond.wait(locker.mutex(), 250)) {
+                if (stallTimer.hasExpired(kMaxWaitMs)) {
+                    if (_writer && _writer->getRenderEngine()) {
+                        _writer->getRenderEngine()->abortRenderingNoRestart();
+                    }
+                    _running = false;
+                    break;
+                }
+            }
         }
     }
 }
@@ -76,7 +94,9 @@ BlockingBackgroundRender::notifyFinished()
 {
     QMutexLocker locker(&_runningMutex);
 
-    assert(_running == true);
+    if (!_running) {
+        return;
+    }
     _running = false;
     _runningCond.wakeOne();
 }
