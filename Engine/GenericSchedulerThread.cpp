@@ -1,7 +1,11 @@
 /* ***** BEGIN LICENSE BLOCK *****
- * This file is part of Natron <https://natrongithub.github.io/>,
+ * This file is part of Natron+ <https://github.com/Joeb0611/Natron>,
+ * a fork of Natron <https://natrongithub.github.io/>.
+ * (C) 2026 Natron+ contributors
  * (C) 2018-2023 The Natron developers
  * (C) 2013-2018 INRIA and Alexandre Gauthier-Foichat
+ *
+ * Modified 2026-09-16: waitForAbortToComplete actually waits; abort cannot hang forever.
  *
  * Natron is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -391,7 +395,10 @@ GenericSchedulerThreadPrivate::waitForAbortToComplete_internal(bool allowBlockin
         QMutexLocker k(&threadStateMutex);
         state = threadState;
     }
-    if ( (state == GenericSchedulerThread::eThreadStateAborted) || GenericSchedulerThread::eThreadStateIdle ) {
+    // The previous `|| eThreadStateIdle` (no comparison) was always true, so this
+    // function never waited and abort did not unwind. See NatronGitHub/Natron#248.
+    if ( (state == GenericSchedulerThread::eThreadStateAborted) ||
+         (state == GenericSchedulerThread::eThreadStateIdle) ) {
         return false;
     }
 
@@ -405,8 +412,22 @@ GenericSchedulerThreadPrivate::waitForAbortToComplete_internal(bool allowBlockin
         // Flag that we are going to be waiting on the main-thread so that the render thread does not attempt to execute something on the main-thread
         QMutexLocker k(&abortRequestedMutex);
 
+        // Slice the wait so a deadlocked scheduler cannot pin the caller at CPU-zero forever.
+        const unsigned long kAbortJoinSliceMs = 250;
+        const int kAbortJoinSlices = 40; // 10s
+        int slices = 0;
         while (abortRequested > 0) {
-            abortRequestedCond.wait(k.mutex());
+            if (!abortRequestedCond.wait(k.mutex(), kAbortJoinSliceMs)) {
+                ++slices;
+                k.unlock();
+                _p->onAbortRequested(true);
+                k.relock();
+                if (slices >= kAbortJoinSlices) {
+                    abortRequested = 0;
+                    abortRequestedCond.wakeAll();
+                    break;
+                }
+            }
         }
     }
     _p->onWaitForAbortCompleted();
